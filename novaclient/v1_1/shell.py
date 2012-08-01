@@ -824,9 +824,12 @@ def _print_server(cs, server):
     flavor_id = flavor.get('id', '')
     info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name, flavor_id)
 
-    image = info.get('image', {})
-    image_id = image.get('id', '')
-    info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
+    try:
+        image = info.get('image', {})
+        image_id = image.get('id', '')
+        info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
+    except:
+        info['image'] = 'missing (missing)'
 
     info.pop('links', None)
     info.pop('addresses', None)
@@ -1649,9 +1652,13 @@ def do_live_migration(cs, args):
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 @utils.arg('--active', action='store_const', dest='state',
-           default='error', const='active',
+           default='active', const='active',
            help='Request the instance be reset to "active" state instead '
            'of "error" state (the default).')
+@utils.arg('--error', action='store_const', dest='state',
+           default='active', const='error',
+           help='Request the instance be reset to "error" state instead '
+           'of "active" state.')
 def do_reset_state(cs, args):
     """Reset the state of an instance"""
     _find_server(cs, args.server).reset_state(args.state)
