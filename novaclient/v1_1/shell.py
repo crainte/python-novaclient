@@ -824,6 +824,9 @@ def _print_server(cs, server):
     flavor_id = flavor.get('id', '')
     info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name, flavor_id)
 
+    # If the image is missing/private/something else then nothing is displayed
+    # to the user. This isn't really a fatal error, we should just notify the
+    # user something is wrong with the image and display what we have -c4
     try:
         image = info.get('image', {})
         image_id = image.get('id', '')
