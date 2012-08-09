@@ -151,26 +151,26 @@ class OpenStackComputeShell(object):
 
         # alias for --os_username, left in for backwards compatibility
         parser.add_argument('--username',
-            help='Deprecated')
+            help='Deprecated in folsum. Use --os_username')
 
         # alias for --os_region_name, left in for backwards compatibility
         parser.add_argument('--region_name',
-            help='Deprecated')
+            help='Deprecated in folsum. Use --os_region_name')
 
         # alias for --os_password, left in for backwards compatibility
         parser.add_argument('--apikey', '--password', dest='apikey',
             default=utils.env('NOVA_API_KEY'),
-            help='Deprecated')
+            help='Deprecated in folsum. Use --os_password')
 
         # alias for --os_tenant_name, left in for backward compatibility
         parser.add_argument('--projectid', '--tenant_name', dest='projectid',
             default=utils.env('NOVA_PROJECT_ID'),
-            help='Deprecated')
+            help='Deprecated in folsum. Use --os_tenant_name')
 
         # alias for --os_auth_url, left in for backward compatibility
         parser.add_argument('--url', '--auth_url', dest='url',
             default=utils.env('NOVA_URL'),
-            help='Deprecated')
+            help='Deprecated in folsum. Use --os_auth_url')
 
         parser.add_argument('--bypass_url', dest='bypass_url',
             help="Use this API endpoint instead of the Service Catalog")

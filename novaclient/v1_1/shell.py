@@ -556,6 +556,25 @@ def do_list(cs, args):
     utils.print_list(cs.servers.list(search_opts=search_opts), columns,
                      formatters, sortby_index=1)
 
+@utils.arg('compute', metavar='<compute>', help='Name of compute node.')
+def do_compute(cs, args):
+    """List all servers on a compute node."""
+
+    # (crainte) should probably convert these
+    # to actual args that way I can filter status/flavor etc.
+    # Original idea from mark.lessel
+    args.host = args.compute
+    args.all_tenants = 1
+    args.reservation_id = None
+    args.ip = None
+    args.ip6 = None
+    args.name = None
+    args.image = None
+    args.flavor = None
+    args.status = None
+    args.instance_name = None
+
+    do_list(cs, args)
 
 @utils.arg('--hard',
     dest='reboot_type',
