@@ -557,13 +557,13 @@ def do_list(cs, args):
                      formatters, sortby_index=1)
 
 @utils.arg('compute', metavar='<compute>', help='Name of compute node.')
-def do_compute(cs, args):
+@utils.arg('--uuid', action="store_true", default=False, help='')
+def do_compute_list(cs, args):
     """List all servers on a compute node."""
 
     # (crainte) should probably convert these
     # to actual args that way I can filter status/flavor etc.
     # Original idea from mark.lessel
-    args.host = args.compute
     args.all_tenants = 1
     args.reservation_id = None
     args.ip = None
@@ -573,6 +573,15 @@ def do_compute(cs, args):
     args.flavor = None
     args.status = None
     args.instance_name = None
+
+    if args.uuid:
+        s = _find_server(cs, args.compute)
+        info = s._info.copy()
+        args.host = info['OS-EXT-SRV-ATTR:host']
+    else:
+        args.host = args.compute
+
+    # (crainte) should print which node i'm searching for, or error if not found
 
     do_list(cs, args)
 
@@ -843,9 +852,9 @@ def _print_server(cs, server):
     flavor_id = flavor.get('id', '')
     info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name, flavor_id)
 
-    # If the image is missing/private/something else then nothing is displayed
+    # (crainte) If the image is missing/private/something else then nothing is displayed
     # to the user. This isn't really a fatal error, we should just notify the
-    # user something is wrong with the image and display what we have -c4
+    # user something is wrong with the image and display what we have
     try:
         image = info.get('image', {})
         image_id = image.get('id', '')
