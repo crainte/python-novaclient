@@ -860,13 +860,12 @@ def _print_server(cs, server):
     # That is, build from base, image new build, build from new image, will
     # result in missing uuid's. My current theory is 'missing' b/c they are not
     # in the public listing.
+    image = info.get('image', {})
+    image_id = image.get('id', '')
+
     try:
-        image = info.get('image', {})
-        image_id = image.get('id', '')
         info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
     except:
-        image = info.get('image', {})
-        image_id = image.get('id', '')
         info['image'] = 'ERROR UUID (%s)' % image_id
         info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
 
