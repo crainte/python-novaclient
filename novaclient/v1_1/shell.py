@@ -860,7 +860,9 @@ def _print_server(cs, server):
         image_id = image.get('id', '')
         info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
     except:
-        info['image'] = 'missing (missing)'
+        image = info.get('image', {})
+        image_id = image.get('id', '')
+        info['image'] = 'ERROR MISSING UUID (%s)' % image_id
 
     info.pop('links', None)
     info.pop('addresses', None)
