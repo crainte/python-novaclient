@@ -852,9 +852,14 @@ def _print_server(cs, server):
     flavor_id = flavor.get('id', '')
     info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name, flavor_id)
 
-    # (crainte) If the image is missing/private/something else then nothing is displayed
+    # (crainte) If the image is missing/private then nothing is displayed
     # to the user. This isn't really a fatal error, we should just notify the
-    # user something is wrong with the image and display what we have
+    # user something is wrong with the image and display what we have.
+    # 
+    # New findings! This also occurs in listing 2nd+ generation of servers.
+    # That is, build from base, image new build, build from new image, will
+    # result in missing uuid's. My current theory is 'missing' b/c they are not
+    # in the public listing.
     try:
         image = info.get('image', {})
         image_id = image.get('id', '')
@@ -862,7 +867,8 @@ def _print_server(cs, server):
     except:
         image = info.get('image', {})
         image_id = image.get('id', '')
-        info['image'] = 'ERROR MISSING UUID (%s)' % image_id
+        info['image'] = 'ERROR UUID (%s)' % image_id
+        info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
 
     info.pop('links', None)
     info.pop('addresses', None)
