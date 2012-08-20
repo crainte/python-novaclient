@@ -534,6 +534,14 @@ def do_image_delete(cs, args):
     const=1,
     default=0,
     help='Display information from all tenants (Admin only).')
+@utils.arg('--created',
+    dest='created',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Display the Created column.')
 def do_list(cs, args):
     """List active servers."""
     all_tenants = int(os.environ.get("ALL_TENANTS", args.all_tenants))
@@ -551,7 +559,11 @@ def do_list(cs, args):
 
     id_col = 'ID'
 
-    columns = [id_col, 'Name', 'Status', 'Networks']
+    if args.created:
+        columns = [id_col, 'Name', 'Created', 'Status', 'Networks']
+    else:
+        columns = [id_col, 'Name', 'Status', 'Networks']
+
     formatters = {'Networks': utils._format_servers_list_networks}
     utils.print_list(cs.servers.list(search_opts=search_opts), columns,
                      formatters, sortby_index=1)
