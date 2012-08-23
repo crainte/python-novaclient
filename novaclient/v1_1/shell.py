@@ -584,6 +584,7 @@ def do_compute_list(cs, args):
     args.image = None
     args.flavor = None
     args.status = None
+    args.created = 0
     args.instance_name = None
 
     if args.uuid:
