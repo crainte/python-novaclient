@@ -257,6 +257,8 @@ def slugify(value):
     From Django's "django/template/defaultfilters.py".
     """
     import unicodedata
+    #from unidecode import unidecode
+    #value = unidecode(value)
     if not isinstance(value, unicode):
         value = unicode(value)
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
