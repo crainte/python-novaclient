@@ -3,6 +3,7 @@ from novaclient.v1_1 import certs
 from novaclient.v1_1 import cloudpipe
 from novaclient.v1_1 import aggregates
 from novaclient.v1_1 import flavors
+from novaclient.v1_1 import flavor_access
 from novaclient.v1_1 import floating_ip_dns
 from novaclient.v1_1 import floating_ips
 from novaclient.v1_1 import floating_ip_pools
@@ -11,6 +12,7 @@ from novaclient.v1_1 import hypervisors
 from novaclient.v1_1 import images
 from novaclient.v1_1 import keypairs
 from novaclient.v1_1 import limits
+from novaclient.v1_1 import networks
 from novaclient.v1_1 import quota_classes
 from novaclient.v1_1 import quotas
 from novaclient.v1_1 import security_group_rules
@@ -53,6 +55,7 @@ class Client(object):
         # know it's not being used as keyword argument
         password = api_key
         self.flavors = flavors.FlavorManager(self)
+        self.flavor_access = flavor_access.FlavorAccessManager(self)
         self.images = images.ImageManager(self)
         self.limits = limits.LimitsManager(self)
         self.servers = servers.ServerManager(self)
@@ -68,6 +71,7 @@ class Client(object):
         self.volume_snapshots = volume_snapshots.SnapshotManager(self)
         self.volume_types = volume_types.VolumeTypeManager(self)
         self.keypairs = keypairs.KeypairManager(self)
+        self.networks = networks.NetworkManager(self)
         self.quota_classes = quota_classes.QuotaClassSetManager(self)
         self.quotas = quotas.QuotaSetManager(self)
         self.security_groups = security_groups.SecurityGroupManager(self)
