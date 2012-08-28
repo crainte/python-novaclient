@@ -563,7 +563,7 @@ def do_list(cs, args):
     if args.created:
         columns = [id_col, 'Name', 'Tenant ID', 'Created', 'Status', 'Networks']
     else:
-        columns = [id_col, 'Name', 'Tenant ID', 'Status', 'Networks']
+        columns = [id_col, 'Name', 'Status', 'Networks']
 
     formatters = {'Networks': utils._format_servers_list_networks}
     utils.print_list(cs.servers.list(search_opts=search_opts), columns,
