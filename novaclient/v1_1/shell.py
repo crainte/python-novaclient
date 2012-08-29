@@ -285,7 +285,10 @@ def _poll_for_status(poll_fn, obj_id, action, final_ok_states,
         status = getattr(obj, status_field)
 
         if status:
-            status = status.lower()
+            try:
+                status = status.lower()
+            except:
+                status = status
 
         progress = getattr(obj, 'progress', None) or 0
         if status in final_ok_states:
@@ -615,14 +618,14 @@ def do_image_delete(cs, args):
     const=1,
     default=0,
     help='Display information from all tenants (Admin only).')
-@utils.arg('--created',
-    dest='created',
+@utils.arg('--details',
+    dest='details',
     metavar='<0|1>',
     nargs='?',
     type=int,
     const=1,
     default=0,
-    help='Display the Created column.')
+    help='Display some useful details.')
 @utils.arg('--all_tenants',
     nargs='?',
     type=int,
@@ -645,7 +648,7 @@ def do_list(cs, args):
 
     id_col = 'ID'
 
-    if args.created:
+    if args.details:
         columns = [id_col, 'Name', 'Tenant ID', 'Created', 'Status', 'Networks']
     else:
         columns = [id_col, 'Name', 'Status', 'Networks']
@@ -656,6 +659,14 @@ def do_list(cs, args):
 
 @utils.arg('compute', metavar='<compute>', help='Name of compute node.')
 @utils.arg('--uuid', action="store_true", default=False, help='')
+@utils.arg('--details',
+    dest='details',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Display some useful details.')
 def do_compute_list(cs, args):
     """List all servers on a compute node."""
 
@@ -670,7 +681,6 @@ def do_compute_list(cs, args):
     args.image = None
     args.flavor = None
     args.status = None
-    args.created = 0
     args.instance_name = None
 
     if args.uuid:
@@ -775,6 +785,38 @@ def do_resize_revert(cs, args):
     """Revert a previous resize (and return to the previous VM)."""
     _find_server(cs, args.server).revert_resize()
 
+def _print_progress(cs, server):
+    # (crainte) at a base, copy of _print_server, more to come
+    if not 'flavor' in server._info:
+        server = _find_server(cs, server.id)
+
+    # do not need all this bs
+    #info = server._info.copy();
+    #info['name'] = 'crainte resize progress indicator'
+    info = {}
+    info['id'] = server._info.get('id', {})
+    info['name'] = server._info.get('name', {})
+    info['status'] = server._info.get('status', {})
+    info['progress'] = server._info.get('progress', {})
+
+    utils.print_dict(info)
+
+
+@utils.arg('server', metavar='<server>', help='Name or ID of server.')
+@utils.arg('--poll',
+    dest='poll',
+    action="store_true",
+    default=False,
+    help='Blocks while instance resizes so progress can be reported.')
+def do_resize_progress(cs, args):
+    """Check the progress of an active resize."""
+    s = _find_server(cs, args.server)
+    _print_progress(cs, s)
+
+    if args.poll:
+        # as per do_image_create
+        #_poll_for_status(cs.servers.get, s.id, 'magic', [None], status_field="progress", show_progress=False, silent=True)
+        _poll_for_status(cs.servers.get, s.id, 'magic', ['active', 'error', 'verify_resize'])
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 @utils.arg('--poll',
