@@ -785,38 +785,6 @@ def do_resize_revert(cs, args):
     """Revert a previous resize (and return to the previous VM)."""
     _find_server(cs, args.server).revert_resize()
 
-def _print_progress(cs, server):
-    # (crainte) at a base, copy of _print_server, more to come
-    if not 'flavor' in server._info:
-        server = _find_server(cs, server.id)
-
-    # do not need all this bs
-    #info = server._info.copy();
-    #info['name'] = 'crainte resize progress indicator'
-    info = {}
-    info['id'] = server._info.get('id', {})
-    info['name'] = server._info.get('name', {})
-    info['status'] = server._info.get('status', {})
-    info['progress'] = server._info.get('progress', {})
-
-    utils.print_dict(info)
-
-
-@utils.arg('server', metavar='<server>', help='Name or ID of server.')
-@utils.arg('--poll',
-    dest='poll',
-    action="store_true",
-    default=False,
-    help='Blocks while instance resizes so progress can be reported.')
-def do_resize_progress(cs, args):
-    """Check the progress of an active resize."""
-    s = _find_server(cs, args.server)
-    _print_progress(cs, s)
-
-    if args.poll:
-        # as per do_image_create
-        #_poll_for_status(cs.servers.get, s.id, 'magic', [None], status_field="progress", show_progress=False, silent=True)
-        _poll_for_status(cs.servers.get, s.id, 'magic', ['active', 'error', 'verify_resize'])
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 @utils.arg('--poll',
