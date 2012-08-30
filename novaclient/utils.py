@@ -142,6 +142,9 @@ def print_list(objs, fields, formatters={}, sortby_index=0):
     mixed_case_fields = ['serverId']
     pt = prettytable.PrettyTable([f for f in fields], caching=False)
     pt.align = 'l'
+    # (crainte) i need larger or more monitors
+    pt.max_width["Networks"] = 50
+    pt.max_width["Value"] = 60
 
     for o in objs:
         row = []
@@ -163,6 +166,10 @@ def print_list(objs, fields, formatters={}, sortby_index=0):
 def print_dict(d, dict_property="Property"):
     pt = prettytable.PrettyTable([dict_property, 'Value'], caching=False)
     pt.align = 'l'
+    # (crainte) i need larger or more monitors
+    pt.max_width["Networks"] = 50
+    pt.max_width["Value"] = 60
+
     [pt.add_row(list(r)) for r in d.iteritems()]
     print pt.get_string(sortby=dict_property)
 
