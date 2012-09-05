@@ -556,8 +556,18 @@ def do_image_delete(cs, args):
     It should go without saying, but you can only delete images you
     created.
     """
-    image = _find_image(cs, args.image)
-    image.delete()
+
+    # (crainte) after talking with raghu, the potential to delete customer data
+    # while emulating them is too high. The action is almost instant on
+    # hypervisors as well so implementing this safety. Uncertain how the
+    # deletes of images is in terms of delay
+    decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
+
+    if decision in "YES":
+        image = _find_image(cs, args.image)
+        image.delete()
+    else:
+        return
 
 
 @utils.arg('--reservation-id',
@@ -998,7 +1008,16 @@ def do_show(cs, args):
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 def do_delete(cs, args):
     """Immediately shut down and delete a server."""
-    _find_server(cs, args.server).delete()
+
+    # (crainte) after talking with raghu, the potential to delete customer data
+    # while emulating them is too high. The action is almost instant on 
+    # hypervisors as well so implementing this safety
+    decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
+
+    if decision in "YES":
+        _find_server(cs, args.server).delete()
+    else:
+        return
 
 
 def _find_server(cs, server):
