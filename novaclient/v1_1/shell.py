@@ -984,8 +984,8 @@ def _print_server(cs, server):
 
     try:
         info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
-    except:
-        info['image'] = 'ERROR UUID (%s)' % image_id
+    except Exception:
+        info['image'] = '%s (%s)' % ("Image not found", image_id)
         info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
 
     info.pop('links', None)
