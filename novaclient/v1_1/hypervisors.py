@@ -59,6 +59,14 @@ class HypervisorManager(base.ManagerWithFind):
         return self._get("/os-hypervisors/%s" % base.getid(hypervisor),
                          "hypervisor")
 
+    def find(self, **kwargs):
+        """
+        Find a specific hypervisor.
+        """
+        hypervisor = kwargs.get("human_id")
+        return self._get("/os-hypervisors/%s" % base.getid(hypervisor),
+                        "hypervisor")
+
     def uptime(self, hypervisor):
         """
         Get the uptime for a specific hypervisor.

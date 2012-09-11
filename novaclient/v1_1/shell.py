@@ -637,11 +637,6 @@ def do_image_delete(cs, args):
     const=1,
     default=0,
     help='Display some useful details.')
-@utils.arg('--all_tenants',
-    nargs='?',
-    type=int,
-    const=1,
-    help=argparse.SUPPRESS)
 def do_list(cs, args):
     """List active servers."""
     all_tenants = int(os.environ.get("ALL_TENANTS", args.all_tenants))
