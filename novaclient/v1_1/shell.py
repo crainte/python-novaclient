@@ -637,6 +637,14 @@ def do_image_delete(cs, args):
     const=1,
     default=0,
     help='Display some useful details.')
+@utils.arg('--minimal',
+    dest='minimal',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Hide network list and how!')
 def do_list(cs, args):
     """List active servers."""
     all_tenants = int(os.environ.get("ALL_TENANTS", args.all_tenants))
@@ -656,6 +664,8 @@ def do_list(cs, args):
 
     if args.details:
         columns = [id_col, 'Name', 'Tenant ID', 'Created', 'Status', 'Networks']
+    elif args.minimal:
+        columns = [id_col, 'Name', 'Tenant ID', 'Status']
     else:
         columns = [id_col, 'Name', 'Status', 'Networks']
 
@@ -673,6 +683,14 @@ def do_list(cs, args):
     const=1,
     default=0,
     help='Display some useful details.')
+@utils.arg('--minimal',
+    dest='minimal',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Hide network list and how!')
 def do_compute_list(cs, args):
     """List all servers on a compute node."""
 
