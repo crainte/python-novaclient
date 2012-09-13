@@ -317,8 +317,16 @@ def _translate_flavor_keys(collection):
                 setattr(item, to_key, item._info[from_key])
 
 
-def _print_flavor_list(flavors):
+def _print_flavor_extra_specs(flavor):
+    try:
+        return flavor.get_keys()
+    except exceptions.NotFound:
+        return "N/A"
+
+
+def _print_flavor_list(cs, flavors):
     _translate_flavor_keys(flavors)
+    formatters = {'extra_specs': _print_flavor_extra_specs}
     utils.print_list(flavors, [
         'ID',
         'Name',
@@ -328,7 +336,8 @@ def _print_flavor_list(flavors):
         'Swap',
         'VCPUs',
         'RXTX_Factor',
-        'Is_Public'])
+        'Is_Public',
+        'extra_specs'], formatters)
 
 
 def do_flavor_list(cs, _args):
@@ -337,7 +346,7 @@ def do_flavor_list(cs, _args):
     for flavor in flavors:
         # int needed for numerical sort
         flavor.id = int(flavor.id)
-    _print_flavor_list(flavors)
+    _print_flavor_list(cs, flavors)
 
 
 @utils.arg('id',
@@ -354,7 +363,7 @@ def do_flavor_delete(cs, args):
 def do_flavor_show(cs, args):
     """Show details about the given flavor."""
     flavor = _find_flavor(cs, args.flavor)
-    _print_flavor(flavor)
+    _print_flavor(cs, flavor)
 
 
 @utils.arg('name',
@@ -394,7 +403,31 @@ def do_flavor_create(cs, args):
     f = cs.flavors.create(args.name, args.ram, args.vcpus, args.disk, args.id,
                           args.ephemeral, args.swap, args.rxtx_factor,
                           args.is_public)
-    _print_flavor_list([f])
+    _print_flavor_list(cs, [f])
+
+
+@utils.arg('flavor',
+    metavar='<flavor>',
+    help="Name or ID of flavor")
+@utils.arg('action',
+    metavar='<action>',
+    choices=['set', 'unset'],
+    help="Actions: 'set' or 'unset'")
+@utils.arg('metadata',
+    metavar='<key=value>',
+    nargs='+',
+    action='append',
+    default=[],
+    help='Extra_specs to set/unset (only key is necessary on unset)')
+def do_flavor_key(cs, args):
+    """Set or unset extra_spec for a flavor."""
+    flavor = _find_flavor(cs, args.flavor)
+    keypair = _extract_metadata(args)
+
+    if args.action == 'set':
+        flavor.set_keys(keypair)
+    elif args.action == 'unset':
+        flavor.unset_keys(keypair.keys())
 
 
 @utils.arg('--flavor',
@@ -533,10 +566,11 @@ def _print_image(image):
     utils.print_dict(info)
 
 
-def _print_flavor(flavor):
+def _print_flavor(cs, flavor):
     info = flavor._info.copy()
     # ignore links, we don't need to present those
     info.pop('links')
+    info.update({"extra_specs": _print_flavor_extra_specs(flavor)})
     utils.print_dict(info)
 
 
@@ -754,6 +788,11 @@ def do_reboot(cs, args):
     action="store_true",
     default=False,
     help='Blocks while instance rebuilds so progress can be reported.')
+@utils.arg('--minimal',
+    dest='minimal',
+    action="store_true",
+    default=False,
+    help='Skips flavor/image lookups when showing instances')
 def do_rebuild(cs, args):
     """Shutdown, re-image, and re-boot a server."""
     server = _find_server(cs, args.server)
@@ -766,7 +805,7 @@ def do_rebuild(cs, args):
 
     kwargs = utils.get_resource_manager_extra_kwargs(do_rebuild, args)
     s = server.rebuild(image, _password, **kwargs)
-    _print_server(cs, s)
+    _print_server(cs, args)
 
     if args.poll:
         _poll_for_status(cs.servers.get, server.id, 'rebuilding', ['active'])
@@ -971,14 +1010,13 @@ def do_meta(cs, args):
         cs.servers.delete_meta(server, metadata.keys())
 
 
-def _print_server(cs, server):
+def _print_server(cs, args):
     # By default when searching via name we will do a
     # findall(name=blah) and due a REST /details which is not the same
     # as a .get() and doesn't get the information about flavors and
     # images. This fix it as we redo the call with the id which does a
     # .get() to get all informations.
-    if not 'flavor' in server._info:
-        server = _find_server(cs, server.id)
+    server = _find_server(cs, args.server)
 
     networks = server.networks
     info = server._info.copy()
@@ -987,7 +1025,11 @@ def _print_server(cs, server):
 
     flavor = info.get('flavor', {})
     flavor_id = flavor.get('id', '')
-    info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name, flavor_id)
+    if args.minimal:
+        info['flavor'] = flavor_id
+    else:
+        info['flavor'] = '%s (%s)' % (_find_flavor(cs, flavor_id).name,
+                                      flavor_id)
 
     # (crainte) If the image is missing/private then nothing is displayed
     # to the user. This isn't really a fatal error, we should just notify the
@@ -1000,11 +1042,15 @@ def _print_server(cs, server):
     image = info.get('image', {})
     image_id = image.get('id', '')
 
-    try:
-        info['image'] = '%s (%s)' % (_find_image(cs, image_id).name, image_id)
-    except Exception:
-        info['image'] = '%s (%s)' % ("Image not found", image_id)
-        info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
+    if args.minimal:
+        info['image'] = image_id
+    else:
+        try:
+            info['image'] = '%s (%s)' % (_find_image(cs, image_id).name,
+                                         image_id)
+        except Exception:
+            info['image'] = '%s (%s)' % ("Image not found", image_id)
+            info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
 
     info.pop('links', None)
     info.pop('addresses', None)
@@ -1012,11 +1058,15 @@ def _print_server(cs, server):
     utils.print_dict(info)
 
 
+@utils.arg('--minimal',
+    dest='minimal',
+    action="store_true",
+    default=False,
+    help='Skips flavor/image lookups when showing instances')
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 def do_show(cs, args):
     """Show details about the given server."""
-    s = _find_server(cs, args.server)
-    _print_server(cs, s)
+    _print_server(cs, args)
 
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
