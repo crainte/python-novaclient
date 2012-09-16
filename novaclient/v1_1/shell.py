@@ -749,8 +749,8 @@ def do_compute_list(cs, args):
         args.host = args.compute
 
     # (crainte) should print which node i'm searching for, or error if not found
-
     do_list(cs, args)
+
 
 @utils.arg('--hard',
     dest='reboot_type',
@@ -1797,6 +1797,68 @@ def do_usage_list(cs, args):
         simplify_usage(usage)
 
     utils.print_list(usage_list, rows)
+
+
+@utils.arg('tenant', metavar='<tenant>', help='ID of tenant.')
+@utils.arg('--all', 
+    dest='all',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Return all the things.')
+@utils.arg('--start', metavar='<start>',
+           help='Usage range start date ex 2012-01-20 (default: 1990-12-1)',
+           default="1990-12-1")
+@utils.arg('--end', metavar='<end>',
+           help='Usage range end date, ex 2012-01-20 (default: tomorrow) ',
+           default=None)
+def do_tenant_servers(cs, args):
+    """List servers of a single tenant"""
+    dateformat = "%Y-%m-%d"
+    rows = ["Instance ID", "Name", "RAM", "State"]
+    info = []
+
+    class ServerUsage:
+        def __init__(self, instance_id=None, name=None, ram=None, state=None):
+            self.instance_id = instance_id
+            self.name = name
+            self.ram = ram
+            self.state = state
+
+    if args.start:
+        start = datetime.datetime.strptime(args.start, dateformat)
+
+    if args.end:
+        end = datetime.datetime.strptime(args.end, dateformat)
+    else:
+        end = (datetime.datetime.today() +
+                 datetime.timedelta(days=1))
+
+    usage_list = cs.usage.get(args.tenant, start, end)
+
+    try:
+        for server in usage_list.server_usages:
+            if args.all:
+                info.append(ServerUsage(
+                    server['instance_id'],
+                    server['name'],
+                    server['memory_mb'],
+                    server['state']
+                    ))
+            else:
+                if server['state'] == 'active':
+                    info.append(ServerUsage(
+                        server['instance_id'],
+                        server['name'],
+                        server['memory_mb'],
+                        server['state']
+                        ))
+
+        utils.print_list(info, rows)
+    except:
+        print "ERROR: Nothing returned for tenant %s." % args.tenant
 
 
 @utils.arg('pk_filename',

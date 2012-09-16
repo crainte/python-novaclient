@@ -4,7 +4,6 @@ Usage interface.
 
 from novaclient import base
 
-
 class Usage(base.Resource):
     """
     Usage contains infomartion about a tenants physical resource usage
