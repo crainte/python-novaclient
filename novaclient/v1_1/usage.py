@@ -45,9 +45,3 @@ class UsageManager(base.ManagerWithFind):
         return self._get("/os-simple-tenant-usage/%s?start=%s&end=%s" %
                          (tenant_id, start.isoformat(), end.isoformat()),
                          "tenant_usage")
-
-    def getlist(self, tenant_id):
-        """"
-        (crainte) set default params for previous method
-        """
-        return self._get("/os-simple-tenant-usage/%s?detailed=true" % tenant_id, "tenant_usage")
