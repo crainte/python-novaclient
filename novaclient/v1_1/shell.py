@@ -1848,7 +1848,7 @@ def do_tenant_servers(cs, args):
                     server['state']
                     ))
             else:
-                if server['state'] == 'active':
+                if server['state'] != 'terminated':
                     info.append(ServerUsage(
                         server['instance_id'],
                         server['name'],
