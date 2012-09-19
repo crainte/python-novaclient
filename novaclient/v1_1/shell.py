@@ -18,6 +18,7 @@
 import argparse
 import datetime
 import getpass
+import locale
 import os
 import sys
 import time
@@ -1551,6 +1552,10 @@ def _print_secgroups(secgroups):
 
 def _get_secgroup(cs, secgroup):
     for s in cs.security_groups.list():
+        encoding = (locale.getpreferredencoding() or
+            sys.stdin.encoding or
+            'UTF-8')
+        s.name = s.name.encode(encoding)
         if secgroup == s.name:
             return s
     raise exceptions.CommandError("Secgroup %s not found" % secgroup)
@@ -1617,9 +1622,24 @@ def do_secgroup_delete(cs, args):
     cs.security_groups.delete(_get_secgroup(cs, args.secgroup))
 
 
+@utils.arg('--all-tenants',
+    dest='all_tenants',
+    metavar='<0|1>',
+    nargs='?',
+    type=int,
+    const=1,
+    default=0,
+    help='Display information from all tenants (Admin only).')
+@utils.arg('--all_tenants',
+    nargs='?',
+    type=int,
+    const=1,
+    help=argparse.SUPPRESS)
 def do_secgroup_list(cs, args):
     """List security groups for the current tenant."""
-    _print_secgroups(cs.security_groups.list())
+    all_tenants = int(os.environ.get("ALL_TENANTS", args.all_tenants))
+    search_opts = {'all_tenants': all_tenants}
+    _print_secgroups(cs.security_groups.list(search_opts=search_opts))
 
 
 @utils.arg('secgroup', metavar='<secgroup>', help='Name of security group.')
