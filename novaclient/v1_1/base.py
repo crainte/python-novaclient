@@ -142,7 +142,7 @@ class BootingManagerWithFind(base.ManagerWithFind):
                 bdm.append(bdm_dict)
 
         #if nics is not None:
-        if nics:
+        if nics is not None:
             # NOTE(tr3buchet): nics can be an empty list
             all_net_data = []
             for nic_info in nics:

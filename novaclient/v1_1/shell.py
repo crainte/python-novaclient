@@ -90,13 +90,16 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
         device_name, mapping = bdm.split('=', 1)
         block_device_mapping[device_name] = mapping
 
-    nics = []
-    for nic_str in args.nics:
-        nic_info = {"net-id": "", "v4-fixed-ip": "", "port-id": ""}
-        for kv_str in nic_str.split(","):
-            k, v = kv_str.split("=", 1)
-            nic_info[k] = v
-        nics.append(nic_info)
+    if args.nics:
+        nics = []
+        for nic_str in args.nics:
+            nic_info = {"net-id": "", "v4-fixed-ip": "", "port-id": ""}
+            for kv_str in nic_str.split(","):
+                k, v = kv_str.split("=", 1)
+                nic_info[k] = v
+            nics.append(nic_info)
+    else:
+        nics = None
 
     hints = {}
     if args.scheduler_hints:
