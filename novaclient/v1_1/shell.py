@@ -729,6 +729,17 @@ def do_list(cs, args):
     metavar='<filter>',
     default=None,
     help='Limit the columns displayed by comma separated list.')
+@utils.arg('--status',
+    dest='status',
+    metavar='<status>',
+    default=None,
+    help='Search by server status')
+@utils.arg('--flavor',
+    dest='flavor',
+    metavar='<flavor>',
+    type=int,
+    default=None,
+    help='Search by flavor ID')
 def do_compute_list(cs, args):
     """List all servers on a compute node."""
 
@@ -741,8 +752,8 @@ def do_compute_list(cs, args):
     args.ip6 = None
     args.name = None
     args.image = None
-    args.flavor = None
-    args.status = None
+    args.flavor = args.flavor
+    args.status = args.status
     args.instance_name = None
 
     if args.uuid:
