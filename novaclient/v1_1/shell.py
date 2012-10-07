@@ -690,22 +690,11 @@ def do_image_delete(cs, args):
     const=1,
     default=int(utils.bool_from_str(os.environ.get("ALL_TENANTS", 'false'))),
     help='Display information from all tenants (Admin only).')
-@utils.arg('--details',
-    dest='details',
-    metavar='<0|1>',
-    nargs='?',
-    type=int,
-    const=1,
-    default=0,
-    help='Display some useful details.')
-@utils.arg('--minimal',
-    dest='minimal',
-    metavar='<0|1>',
-    nargs='?',
-    type=int,
-    const=1,
-    default=0,
-    help='Hide network list and how!')
+@utils.arg('--filter',
+    dest='filter',
+    metavar='<filter>',
+    default=None,
+    help='Limit the columns displayed by comma separated list.')
 def do_list(cs, args):
     """List active servers."""
     search_opts = {
@@ -722,10 +711,10 @@ def do_list(cs, args):
 
     id_col = 'ID'
 
-    if args.details:
-        columns = [id_col, 'Name', 'Tenant ID', 'Created', 'Status', 'Networks']
-    elif args.minimal:
-        columns = [id_col, 'Name', 'Tenant ID', 'Status']
+    if args.filter:
+        columns = [id_col]
+        for col in args.filter.split(","):
+            columns.append(col.strip().title())
     else:
         columns = [id_col, 'Name', 'Status', 'Networks']
 
@@ -735,22 +724,11 @@ def do_list(cs, args):
 
 @utils.arg('compute', metavar='<compute>', help='Name of compute node.')
 @utils.arg('--uuid', action="store_true", default=False, help='')
-@utils.arg('--details',
-    dest='details',
-    metavar='<0|1>',
-    nargs='?',
-    type=int,
-    const=1,
-    default=0,
-    help='Display some useful details.')
-@utils.arg('--minimal',
-    dest='minimal',
-    metavar='<0|1>',
-    nargs='?',
-    type=int,
-    const=1,
-    default=0,
-    help='Hide network list and how!')
+@utils.arg('--filter',
+    dest='filter',
+    metavar='<filter>',
+    default=None,
+    help='Limit the columns displayed by comma separated list.')
 def do_compute_list(cs, args):
     """List all servers on a compute node."""
 
