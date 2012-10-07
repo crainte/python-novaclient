@@ -141,7 +141,6 @@ class BootingManagerWithFind(base.ManagerWithFind):
                     bdm_dict['delete_on_termination'] = mapping_parts[3]
                 bdm.append(bdm_dict)
 
-        #if nics is not None:
         if nics is not None:
             # NOTE(tr3buchet): nics can be an empty list
             all_net_data = []

@@ -98,6 +98,8 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
                 k, v = kv_str.split("=", 1)
                 nic_info[k] = v
             nics.append(nic_info)
+    elif args.nics_bool:
+        nics = []
     else:
         nics = None
 
@@ -196,26 +198,31 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
     action='append',
     help=argparse.SUPPRESS)
 @utils.arg('--hint',
-        action='append',
-        dest='scheduler_hints',
-        default=[],
-        metavar='<key=value>',
-        help="Send arbitrary key/value pairs to the scheduler for custom use.")
+    action='append',
+    dest='scheduler_hints',
+    default=[],
+    metavar='<key=value>',
+    help="Send arbitrary key/value pairs to the scheduler for custom use.")
 @utils.arg('--nic',
-     metavar="<net-id=net-uuid,v4-fixed-ip=ip-addr,port-id=port-uuid>",
-     action='append',
-     dest='nics',
-     default=[],
-     help="Create a NIC on the server.\n"
+    metavar="<net-id=net-uuid,v4-fixed-ip=ip-addr,port-id=port-uuid>",
+    action='append',
+    dest='nics',
+    default=[],
+    help="Create a NIC on the server.\n"
            "Specify option multiple times to create multiple NICs.\n"
            "net-id: attach NIC to network with this UUID (optional)\n"
            "v4-fixed-ip: IPv4 fixed address for NIC (optional).\n"
            "port-id: attach NIC to port with this UUID (optional)")
+@utils.arg('--no-nic',
+    dest='nics_bool',
+    action='store_true',
+    default=False,
+    help='Build a server with no networking.')
 @utils.arg('--config-drive',
-     metavar="<value>",
-     dest='config_drive',
-     default=False,
-     help="Enable config drive")
+    metavar="<value>",
+    dest='config_drive',
+    default=False,
+    help="Enable config drive")
 @utils.arg('--poll',
     dest='poll',
     action="store_true",
