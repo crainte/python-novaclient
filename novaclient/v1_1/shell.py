@@ -690,9 +690,9 @@ def do_image_delete(cs, args):
     const=1,
     default=int(utils.bool_from_str(os.environ.get("ALL_TENANTS", 'false'))),
     help='Display information from all tenants (Admin only).')
-@utils.arg('--filter',
-    dest='filter',
-    metavar='<filter>',
+@utils.arg('--display',
+    dest='display',
+    metavar='<display>',
     default=None,
     help='Limit the columns displayed by comma separated list.')
 def do_list(cs, args):
@@ -711,9 +711,9 @@ def do_list(cs, args):
 
     id_col = 'ID'
 
-    if args.filter:
+    if args.display:
         columns = [id_col]
-        for col in args.filter.split(","):
+        for col in args.display.split(","):
             columns.append(col.strip().title())
     else:
         columns = [id_col, 'Name', 'Status', 'Networks']
@@ -724,9 +724,9 @@ def do_list(cs, args):
 
 @utils.arg('compute', metavar='<compute>', help='Name of compute node.')
 @utils.arg('--uuid', action="store_true", default=False, help='')
-@utils.arg('--filter',
-    dest='filter',
-    metavar='<filter>',
+@utils.arg('--display',
+    dest='display',
+    metavar='<display>',
     default=None,
     help='Limit the columns displayed by comma separated list.')
 @utils.arg('--status',
@@ -752,8 +752,6 @@ def do_compute_list(cs, args):
     args.ip6 = None
     args.name = None
     args.image = None
-    args.flavor = args.flavor
-    args.status = args.status
     args.instance_name = None
 
     if args.uuid:
@@ -1863,11 +1861,23 @@ def do_usage_list(cs, args):
 @utils.arg('--end', metavar='<end>',
            help='Usage range end date, ex 2012-01-20 (default: tomorrow) ',
            default=None)
+@utils.arg('--display',
+    dest='display',
+    metavar='<display>',
+    default=None,
+    help="Limit the columns displayed by comma separated list.\n"
+    "Example: --display 'memory mb, local gb, state'")
 def do_tenant_servers(cs, args):
     """List servers of a single tenant"""
     dateformat = "%Y-%m-%d"
-    rows = ["Instance ID", "Name", "RAM", "State"]
     info = []
+
+    if args.display:
+        rows = ["Instance ID"]
+        for col in args.display.split(","):
+            rows.append(col.strip().title())
+    else:
+        rows = ["Instance ID", "Name", "Memory MB", "State"]
 
     class ServerUsage:
         def __init__(self, instance_id=None, name=None, ram=None, state=None):
@@ -1890,22 +1900,18 @@ def do_tenant_servers(cs, args):
     try:
         for server in usage_list.server_usages:
             if args.all:
-                info.append(ServerUsage(
-                    server['instance_id'],
-                    server['name'],
-                    server['memory_mb'],
-                    server['state']
-                    ))
+                temp = ServerUsage()
+                for k,v in server.items():
+                    setattr(temp,k,v)
+                info.append(temp)
             else:
                 if server['state'] != 'terminated':
-                    info.append(ServerUsage(
-                        server['instance_id'],
-                        server['name'],
-                        server['memory_mb'],
-                        server['state']
-                        ))
+                    temp = ServerUsage()
+                    for k,v in server.items():
+                        setattr(temp,k,v)
+                    info.append(temp)
 
-        utils.print_list(info, rows)
+        utils.print_list(info, rows, sortby_index=1)
     except:
         print "ERROR: Nothing returned for tenant %s." % args.tenant
 
