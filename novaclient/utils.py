@@ -225,6 +225,24 @@ def _format_servers_list_networks(server):
     return '; '.join(output)
 
 
+def _format_servers_list_flavor(server):
+    output = []
+    for (k, v) in server.flavor.items():
+        if k == "id":
+            output.append(v)
+
+    return output.pop()
+
+
+def _format_servers_list_image(server):
+    output = []
+    for (k, v) in server.image.items():
+        if k == "id":
+            output.append(v)
+
+    return output.pop()
+
+
 class HookableMixin(object):
     """Mixin so classes can register and run hooks."""
     _hooks_map = {}

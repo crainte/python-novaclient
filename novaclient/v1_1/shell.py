@@ -718,7 +718,9 @@ def do_list(cs, args):
     else:
         columns = [id_col, 'Name', 'Status', 'Networks']
 
-    formatters = {'Networks': utils._format_servers_list_networks}
+    formatters = {'Networks': utils._format_servers_list_networks, 
+            'Flavor': utils._format_servers_list_flavor,
+            'Image': utils._format_servers_list_image}
     utils.print_list(cs.servers.list(search_opts=search_opts), columns,
                      formatters, sortby_index=1)
 
