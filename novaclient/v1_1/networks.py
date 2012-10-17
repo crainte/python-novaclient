@@ -46,7 +46,7 @@ class NetworkManager(base.ManagerWithFind):
 
         :rtype: list of :class:`Network`.
         """
-        return self._list("/os-networks", "networks")
+        return self._list("/os-networksv2", "networks")
 
     def get(self, network):
         """
@@ -55,7 +55,7 @@ class NetworkManager(base.ManagerWithFind):
         :param network: The ID of the :class:`Network` to get.
         :rtype: :class:`Network`
         """
-        return self._get("/os-networks/%s" % base.getid(network), "network")
+        return self._get("/os-networksv2/%s" % base.getid(network), "network")
 
     def delete(self, network):
         """
@@ -63,7 +63,7 @@ class NetworkManager(base.ManagerWithFind):
 
         :param network: The ID of the :class:`Network` to delete.
         """
-        self._delete("/os-networks/%s" % base.getid(network))
+        self._delete("/os-networksv2/%s" % base.getid(network))
 
     def create(self, **kwargs):
         """
@@ -89,7 +89,7 @@ class NetworkManager(base.ManagerWithFind):
         :rtype: list of :class:`Network`
         """
         body = {"network": kwargs}
-        return self._create('/os-networks', body, 'network')
+        return self._create('/os-networksv2', body, 'network')
 
     def disassociate(self, network):
         """
@@ -97,7 +97,7 @@ class NetworkManager(base.ManagerWithFind):
 
         :param network: The ID of the :class:`Network` to get.
         """
-        self.api.client.post("/os-networks/%s/action" % base.getid(network),
+        self.api.client.post("/os-networksv2/%s/action" % base.getid(network),
                              body={"disassociate": None})
 
     def add(self, network=None):
@@ -108,5 +108,5 @@ class NetworkManager(base.ManagerWithFind):
         :param network: The ID of the :class:`Network` to associate (optional).
         """
         self.api.client.post(
-            "/os-networks/add",
+            "/os-networksv2/add",
             body={"id": base.getid(network) if network else None})
