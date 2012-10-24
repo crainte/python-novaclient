@@ -160,7 +160,7 @@ def print_list(objs, fields, formatters={}, sortby_index=0):
                 row.append(data)
         pt.add_row(row)
 
-    print pt.get_string(sortby=sortby)
+    print pt.get_string(sortby=sortby).encode("utf8")
 
 
 def print_dict(d, dict_property="Property"):
@@ -171,7 +171,7 @@ def print_dict(d, dict_property="Property"):
     pt.max_width["Value"] = 80
 
     [pt.add_row(list(r)) for r in d.iteritems()]
-    print pt.get_string(sortby=dict_property)
+    print pt.get_string(sortby=dict_property).encode("utf8")
 
 
 def find_resource(manager, name_or_id):
