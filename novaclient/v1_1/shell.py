@@ -1098,18 +1098,28 @@ def do_show(cs, args):
 
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
+@utils.arg('--force',
+    dest='force',
+    action='store_true',
+    default=False,
+    help=argparse.SUPPRESS)
 def do_delete(cs, args):
     """Immediately shut down and delete a server."""
 
     # (crainte) after talking with raghu, the potential to delete customer data
     # while emulating them is too high. The action is almost instant on 
     # hypervisors as well so implementing this safety
-    decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
-
-    if decision in "YES":
+    
+    # (crainte) hidden force option, please don't use
+    if args.force:
         _find_server(cs, args.server).delete()
     else:
-        return
+        decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
+
+        if decision in "YES":
+            _find_server(cs, args.server).delete()
+        else:
+            return
 
 
 def _find_server(cs, server):
