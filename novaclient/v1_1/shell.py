@@ -354,9 +354,6 @@ def _print_flavor_list(cs, flavors):
 def do_flavor_list(cs, _args):
     """Print a list of available 'flavors' (sizes of servers)."""
     flavors = cs.flavors.list()
-    for flavor in flavors:
-        # int needed for numerical sort
-        flavor.id = int(flavor.id)
     _print_flavor_list(cs, flavors)
 
 
@@ -643,12 +640,12 @@ def do_image_delete(cs, args):
     dest='ip',
     metavar='<ip-regexp>',
     default=None,
-    help='Search with regular expression match by IP address')
+    help='Search with regular expression match by IP address (Admin only).')
 @utils.arg('--ip6',
     dest='ip6',
     metavar='<ip6-regexp>',
     default=None,
-    help='Search with regular expression match by IPv6 address')
+    help='Search with regular expression match by IPv6 address (Admin only).')
 @utils.arg('--name',
     dest='name',
     metavar='<name-regexp>',
@@ -658,7 +655,7 @@ def do_image_delete(cs, args):
     dest='instance_name',
     metavar='<name-regexp>',
     default=None,
-    help='Search with regular expression match by instance name')
+    help='Search with regular expression match by instance name (Admin only).')
 @utils.arg('--instance_name',
     help=argparse.SUPPRESS)
 @utils.arg('--status',
@@ -681,7 +678,8 @@ def do_image_delete(cs, args):
     dest='host',
     metavar='<hostname>',
     default=None,
-    help='Search instances by hostname to which they are assigned')
+    help='Search instances by hostname to which they are assigned '
+         '(Admin only).')
 @utils.arg('--all-tenants',
     dest='all_tenants',
     metavar='<0|1>',
@@ -1097,14 +1095,15 @@ def do_show(cs, args):
     _print_server(cs, args)
 
 
-@utils.arg('server', metavar='<server>', help='Name or ID of server.')
+@utils.arg('server', metavar='<server>', nargs='+',
+        help='Name or ID of server.')
 @utils.arg('--force',
     dest='force',
     action='store_true',
     default=False,
     help=argparse.SUPPRESS)
 def do_delete(cs, args):
-    """Immediately shut down and delete a server."""
+    """Immediately shut down and delete specified server(s)."""
 
     # (crainte) after talking with raghu, the potential to delete customer data
     # while emulating them is too high. The action is almost instant on 
@@ -1112,12 +1111,20 @@ def do_delete(cs, args):
     
     # (crainte) hidden force option, please don't use
     if args.force:
-        _find_server(cs, args.server).delete()
+        for server in args.server:
+            try:
+                _find_server(cs, args.server).delete()
+            except Exception, e:
+                print e
     else:
         decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
 
         if decision in "YES":
-            _find_server(cs, args.server).delete()
+            for server in args.server:
+                try:
+                    _find_server(cs, args.server).delete()
+                except Exception, e:
+                    print e
         else:
             return
 
@@ -2123,10 +2130,13 @@ def do_host_describe(cs, args):
     utils.print_list(result, columns)
 
 
+@utils.arg('--zone', metavar='<zone>', default=None,
+           help='Filters the list, returning only those '
+                'hosts in the availability zone <zone>.')
 def do_host_list(cs, args):
     """List all hosts by service"""
-    columns = ["host_name", "service"]
-    result = cs.hosts.list_all()
+    columns = ["host_name", "service", "zone"]
+    result = cs.hosts.list_all(args.zone)
     utils.print_list(result, columns)
 
 

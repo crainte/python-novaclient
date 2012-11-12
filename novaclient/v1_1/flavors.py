@@ -5,6 +5,7 @@ Flavor interface.
 
 from novaclient import base
 from novaclient import exceptions
+from novaclient import utils
 
 
 class Flavor(base.Resource):
@@ -133,10 +134,8 @@ class FlavorManager(base.ManagerWithFind):
         except:
             raise exceptions.CommandError("Disk must be an integer.")
 
-        try:
-            flavorid = int(flavorid)
-        except:
-            raise exceptions.CommandError("Flavor ID must be an integer.")
+        if flavorid == "auto":
+            flavorid = None
 
         try:
             swap = int(swap)
@@ -153,13 +152,18 @@ class FlavorManager(base.ManagerWithFind):
         except:
             raise exceptions.CommandError("rxtx_factor must be an integer.")
 
+        try:
+            is_public = utils.bool_from_str(is_public)
+        except:
+            raise exceptions.CommandError("is_public must be a boolean.")
+
         body = {
             "flavor": {
                 "name": name,
                 "ram": int(ram),
                 "vcpus": int(vcpus),
                 "disk": int(disk),
-                "id": int(flavorid),
+                "id": flavorid,
                 "swap": int(swap),
                 "OS-FLV-EXT-DATA:ephemeral": int(ephemeral),
                 "rxtx_factor": int(rxtx_factor),
