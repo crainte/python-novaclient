@@ -693,6 +693,12 @@ def do_image_delete(cs, args):
     metavar='<display>',
     default=None,
     help='Limit the columns displayed by comma separated list.')
+@utils.arg('--tenant',
+    #nova db searches by project_id
+    dest='tenant',
+    metavar='<tenant>',
+    nargs='?',
+    help='Display information from single tenant (Admin only).')
 def do_list(cs, args):
     """List active servers."""
     search_opts = {
@@ -704,6 +710,7 @@ def do_list(cs, args):
             'image': args.image,
             'flavor': args.flavor,
             'status': args.status,
+            'project_id': args.tenant,
             'host': args.host,
             'instance_name': args.instance_name}
 
