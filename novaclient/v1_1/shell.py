@@ -1046,8 +1046,11 @@ def _print_server(cs, args):
 
     networks = server.networks
     info = server._info.copy()
+    # (crainte) modify network display, the server details block
+    # was getting way out of hand
+    networking = {}
     for network_label, address_list in networks.items():
-        info['%s network' % network_label] = ', '.join(address_list)
+        networking['%s network' % network_label] = ', '.join(address_list)
 
     flavor = info.get('flavor', {})
     flavor_id = flavor.get('id', '')
@@ -1080,8 +1083,14 @@ def _print_server(cs, args):
 
     info.pop('links', None)
     info.pop('addresses', None)
+    # (crainte) removing repeated data
+    info.pop('hostId', None)
+    info.pop('accessIPv4', None)
+    info.pop('accessIPv6', None)
+    info.pop('rax-bandwidth:bandwidth', None)
 
     utils.print_dict(info)
+    utils.print_dict(networking)
 
 
 @utils.arg('--minimal',

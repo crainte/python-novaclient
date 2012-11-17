@@ -148,7 +148,7 @@ def print_list(objs, fields, formatters={}, sortby_index=0):
     pt.align = 'l'
     # (crainte) i need larger or more monitors
     pt.max_width["Networks"] = 50
-    pt.max_width["Value"] = 80
+    pt.max_width["Value"] = 70
 
     for o in objs:
         row = []
@@ -172,7 +172,7 @@ def print_dict(d, dict_property="Property"):
     pt.align = 'l'
     # (crainte) i need larger or more monitors
     pt.max_width["Networks"] = 50
-    pt.max_width["Value"] = 80
+    pt.max_width["Value"] = 70
 
     [pt.add_row(list(r)) for r in d.iteritems()]
     print pt.get_string(sortby=dict_property).encode("utf8")
