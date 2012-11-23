@@ -2406,30 +2406,24 @@ def _quota_update(manager, identifier, args):
         manager.update(identifier, **updates)
 
 
-@utils.arg('--tenant',
+@utils.arg('tenant',
     metavar='<tenant-id>',
     default=None,
-    help='UUID or name of tenant to list the quotas for.')
+    help='UUID of tenant to list the quotas for.')
 def do_quota_show(cs, args):
     """List the quotas for a tenant."""
 
-    if not args.tenant:
-        _quota_show(cs.quotas.get(cs.project_id))
-    else:
-        _quota_show(cs.quotas.get(args.tenant))
+    _quota_show(cs.quotas.get(args.tenant))
 
 
-@utils.arg('--tenant',
+@utils.arg('tenant',
     metavar='<tenant-id>',
     default=None,
     help='UUID or name of tenant to list the default quotas for.')
 def do_quota_defaults(cs, args):
     """List the default quotas for a tenant."""
 
-    if not args.tenant:
-        _quota_show(cs.quotas.defaults(cs.project_id))
-    else:
-        _quota_show(cs.quotas.defaults(args.tenant))
+    _quota_show(cs.quotas.defaults(args.tenant))
 
 
 @utils.arg('tenant',
