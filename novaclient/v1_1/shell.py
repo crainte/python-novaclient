@@ -1053,11 +1053,12 @@ def _print_server(cs, args):
 
     networks = server.networks
     info = server._info.copy()
-    # (crainte) modify network display, the server details block
-    # was getting way out of hand
-    networking = {}
+    # (crainte) network display v3.0
+    string = '\n'
     for network_label, address_list in networks.items():
-        networking['%s network' % network_label] = ', '.join(address_list)
+        string += '%-8s = %s\n' % (network_label, ('\n%-8s = '% network_label).join(address_list))
+
+    info['networks'] = string
 
     flavor = info.get('flavor', {})
     flavor_id = flavor.get('id', '')
@@ -1097,7 +1098,6 @@ def _print_server(cs, args):
     info.pop('rax-bandwidth:bandwidth', None)
 
     utils.print_dict(info)
-    utils.print_dict(networking)
 
 
 @utils.arg('--minimal',
