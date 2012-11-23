@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 import httplib2
 import urlparse
 
@@ -248,6 +249,34 @@ class FakeHTTPClient(base_client.HTTPClient):
                 "metadata": {
                     "Server Label": "DB 1"
                 }
+            },
+            {
+                "id": 9012,
+                "name": "sample-server3",
+                "image": "",
+                "flavor": {
+                    "id": 1,
+                    "name": "256 MB Server",
+                },
+                "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                "status": "ACTIVE",
+                "addresses": {
+                    "public": [{
+                        "version": 4,
+                        "addr": "4.5.6.7",
+                    },
+                    {
+                        "version": 4,
+                        "addr": "5.6.9.8",
+                    }],
+                    "private": [{
+                        "version": 4,
+                        "addr": "10.13.12.13",
+                    }],
+                },
+                "metadata": {
+                    "Server Label": "DB 1"
+                }
             }
         ]})
 
@@ -261,12 +290,23 @@ class FakeHTTPClient(base_client.HTTPClient):
                 fakes.assert_has_keys(pfile, required=['path', 'contents'])
         return (202, self.get_servers_1234()[1])
 
+    def post_os_volumes_boot(self, body, **kw):
+        assert set(body.keys()) <= set(['server', 'os:scheduler_hints'])
+        fakes.assert_has_keys(body['server'],
+                        required=['name', 'block_device_mapping', 'flavorRef'],
+                        optional=['imageRef'])
+        return (202, self.get_servers_9012()[1])
+
     def get_servers_1234(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][0]}
         return (200, r)
 
     def get_servers_5678(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][1]}
+        return (200, r)
+
+    def get_servers_9012(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][2]}
         return (200, r)
 
     def put_servers_1234(self, body, **kw):
@@ -867,6 +907,35 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def delete_os_aggregates_1(self, **kw):
         return (202, None)
+
+    #
+    # Services
+    #
+    def get_os_services(self, **kw):
+        host = kw.get('host', 'host1')
+        service = kw.get('service', 'nova-compute')
+        return (200, {'services':
+                     [{'binary': service,
+                       'host': host,
+                       'zone': 'nova',
+                       'status': 'enabled',
+                       'state': 'up',
+                       'updated_at': datetime(2012, 10, 29, 13, 42, 2)},
+                      {'binary': service,
+                       'host': host,
+                       'zone': 'nova',
+                       'status': 'disabled',
+                       'state': 'down',
+                       'updated_at': datetime(2012, 9, 18, 8, 3, 38)},
+                      ]})
+
+    def put_os_services_enable(self, body, **kw):
+        return (200, {'host': body['host'], 'service': body['service'],
+                'disabled': False})
+
+    def put_os_services_disable(self, body, **kw):
+        return (200, {'host': body['host'], 'service': body['service'],
+                'disabled': True})
 
     #
     # Hosts

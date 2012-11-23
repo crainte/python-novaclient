@@ -49,7 +49,11 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
         raise exceptions.CommandError("you need to specify a Flavor ID ")
 
     flavor = _find_flavor(cs, args.flavor)
-    image = _find_image(cs, args.image)
+
+    if args.image:
+        image = _find_image(cs, args.image)
+    else:
+        image = None
 
     meta = dict(v.split('=', 1) for v in args.meta)
 
@@ -247,8 +251,11 @@ def do_boot(cs, args):
     info['flavor'] = _find_flavor(cs, flavor_id).name
 
     image = info.get('image', {})
-    image_id = image.get('id', '')
-    info['image'] = _find_image(cs, image_id).name
+    if image:
+        image_id = image.get('id', '')
+        info['image'] = _find_image(cs, image_id).name
+    else:  # Booting from volume
+        info['image'] = "Attempt to boot from volume - no image supplied"
 
     info.pop('links', None)
     info.pop('addresses', None)
@@ -876,7 +883,7 @@ def do_resize_revert(cs, args):
     default=False,
     help='Blocks while instance migrates so progress can be reported.')
 def do_migrate(cs, args):
-    """Migrate a server."""
+    """Migrate a server. The new host will be selected by the scheduler."""
     server = _find_server(cs, args.server)
     server.migrate()
 
@@ -1077,17 +1084,19 @@ def _print_server(cs, args):
     # result in missing uuid's. My current theory is 'missing' b/c they are not
     # in the public listing.
     image = info.get('image', {})
-    image_id = image.get('id', '')
-
-    if args.minimal:
-        info['image'] = image_id
-    else:
-        try:
-            info['image'] = '%s (%s)' % (_find_image(cs, image_id).name,
-                                         image_id)
-        except Exception:
-            info['image'] = '%s (%s)' % ("Image not found", image_id)
-            info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
+    if image:
+        image_id = image.get('id', '')
+        if args.minimal:
+            info['image'] = image_id
+        else:
+            try:
+                info['image'] = '%s (%s)' % (_find_image(cs, image_id).name,
+                                             image_id)
+            except Exception:
+                info['image'] = '%s (%s)' % ("Image not found", image_id)
+                info['image_e'] = 'missing, private, or you are viewing a 2nd+ generation server'
+    else:  # Booted from volume
+        info['image'] = "Attempt to boot from volume - no image supplied"
 
     info.pop('links', None)
     info.pop('addresses', None)
@@ -2138,6 +2147,33 @@ def do_reset_state(cs, args):
     _find_server(cs, args.server).reset_state(args.state)
 
 
+@utils.arg('--host', metavar='<hostname>', default=None,
+           help='Name of host.')
+@utils.arg('--servicename', metavar='<servicename>', default=None,
+           help='Name of service.')
+def do_service_list(cs, args):
+    """Show a list of all running services. Filter by host & service name."""
+    result = cs.services.list(args.host, args.servicename)
+    columns = ["Binary", "Host", "Zone", "Status", "State", "Updated_at"]
+    utils.print_list(result, columns)
+
+
+@utils.arg('host', metavar='<hostname>', help='Name of host.')
+@utils.arg('service', metavar='<servicename>', help='Name of service.')
+def do_service_enable(cs, args):
+    """Enable the service"""
+    result = cs.services.enable(args.host, args.service)
+    utils.print_list([result], ['Host', 'Service', 'Disabled'])
+
+
+@utils.arg('host', metavar='<hostname>', help='Name of host.')
+@utils.arg('service', metavar='<servicename>', help='Name of service.')
+def do_service_disable(cs, args):
+    """Enable the service"""
+    result = cs.services.disable(args.host, args.service)
+    utils.print_list([result], ['Host', 'Service', 'Disabled'])
+
+
 @utils.arg('host', metavar='<hostname>', help='Name of host.')
 def do_host_describe(cs, args):
     """Describe a specific host"""
@@ -2216,7 +2252,8 @@ def do_hypervisor_servers(cs, args):
     for hyper in hypers:
         hyper_host = hyper.hypervisor_hostname
         hyper_id = hyper.id
-        instances.extend([InstanceOnHyper(id=serv['uuid'],
+        if hasattr(hyper, 'servers'):
+            instances.extend([InstanceOnHyper(id=serv['uuid'],
                                           name=serv['name'],
                                           hypervisor_hostname=hyper_host,
                                           hypervisor_id=hyper_id)
@@ -2309,6 +2346,10 @@ def do_credentials(cs, _args):
     dest='identity',
     help='Private key file, same as the -i option to the ssh command.',
     default='')
+@utils.arg('--extra-opts',
+    dest='extra',
+    help='Extra options to pass to ssh. see: man ssh',
+    default='')
 def do_ssh(cs, args):
     """SSH into a server."""
     addresses = _find_server(cs, args.server).addresses
@@ -2329,8 +2370,9 @@ def do_ssh(cs, args):
     identity = '-i %s' % args.identity if len(args.identity) else ''
 
     if ip_address:
-        os.system("ssh -%d -p%d %s %s@%s" % (version, args.port, identity,
-                                             args.login, ip_address))
+        os.system("ssh -%d -p%d %s %s@%s %s" % (version, args.port, identity,
+                                                args.login, ip_address,
+                                                args.extra))
     else:
         pretty_version = "IPv%d" % version
         print "ERROR: No %s %s address found." % (address_type,
@@ -2346,7 +2388,10 @@ _quota_resources = ['instances', 'cores', 'ram', 'volumes', 'gigabytes',
 def _quota_show(quotas):
     quota_dict = {}
     for resource in _quota_resources:
-        quota_dict[resource] = getattr(quotas, resource, None)
+        try:
+            quota_dict[resource] = getattr(quotas, resource)
+        except AttributeError:
+            pass
     utils.print_dict(quota_dict)
 
 
@@ -2361,22 +2406,30 @@ def _quota_update(manager, identifier, args):
         manager.update(identifier, **updates)
 
 
-@utils.arg('tenant',
+@utils.arg('--tenant',
     metavar='<tenant-id>',
-    help='UUID of tenant to list the quotas for.')
+    default=None,
+    help='UUID or name of tenant to list the quotas for.')
 def do_quota_show(cs, args):
     """List the quotas for a tenant."""
 
-    _quota_show(cs.quotas.get(args.tenant))
+    if not args.tenant:
+        _quota_show(cs.quotas.get(cs.project_id))
+    else:
+        _quota_show(cs.quotas.get(args.tenant))
 
 
-@utils.arg('tenant',
+@utils.arg('--tenant',
     metavar='<tenant-id>',
-    help='UUID of tenant to list the default quotas for.')
+    default=None,
+    help='UUID or name of tenant to list the default quotas for.')
 def do_quota_defaults(cs, args):
     """List the default quotas for a tenant."""
 
-    _quota_show(cs.quotas.defaults(args.tenant))
+    if not args.tenant:
+        _quota_show(cs.quotas.defaults(cs.project_id))
+    else:
+        _quota_show(cs.quotas.defaults(args.tenant))
 
 
 @utils.arg('tenant',

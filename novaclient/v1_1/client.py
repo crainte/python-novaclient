@@ -23,6 +23,7 @@ from novaclient.v1_1 import virtual_interfaces
 from novaclient.v1_1 import volumes
 from novaclient.v1_1 import volume_snapshots
 from novaclient.v1_1 import volume_types
+from novaclient.v1_1 import services
 
 
 class Client(object):
@@ -54,6 +55,7 @@ class Client(object):
         # FIXME(comstud): Rename the api_key argument above when we
         # know it's not being used as keyword argument
         password = api_key
+        self.project_id = project_id
         self.flavors = flavors.FlavorManager(self)
         self.flavor_access = flavor_access.FlavorAccessManager(self)
         self.images = images.ImageManager(self)
@@ -83,6 +85,7 @@ class Client(object):
         self.aggregates = aggregates.AggregateManager(self)
         self.hosts = hosts.HostManager(self)
         self.hypervisors = hypervisors.HypervisorManager(self)
+        self.services = services.ServiceManager(self)
 
         # Add in any extensions...
         if extensions:

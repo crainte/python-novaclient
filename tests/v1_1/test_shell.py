@@ -86,6 +86,33 @@ class ShellTest(utils.TestCase):
                 }},
         )
 
+    def test_boot_no_image_no_bdms(self):
+        cmd = 'boot --flavor 1 some-server'
+        self.assertRaises(exceptions.CommandError, self.run_command, cmd)
+
+    def test_boot_no_image_bdms(self):
+        self.run_command(
+            'boot --flavor 1 --block_device_mapping vda=blah:::0 some-server'
+        )
+        self.assert_called_anytime(
+            'POST', '/os-volumes_boot',
+            {'server': {
+                'flavorRef': '1',
+                'name': 'some-server',
+                'block_device_mapping': [
+                    {
+                        'volume_size': '',
+                        'volume_id': 'blah',
+                        'delete_on_termination': '0',
+                        'device_name':'vda'
+                    }
+                ],
+                'imageRef': '',
+                'min_count': 1,
+                'max_count': 1,
+                }},
+        )
+
     def test_boot_metadata(self):
         self.run_command('boot --image 1 --flavor 1 --meta foo=bar=pants'
                          ' --meta spam=eggs some-server ')
@@ -276,6 +303,11 @@ class ShellTest(utils.TestCase):
         self.assert_called('GET', '/flavors/1', pos=-2)
         self.assert_called('GET', '/images/2')
 
+    def test_show_no_image(self):
+        self.run_command('show 9012')
+        self.assert_called('GET', '/servers/9012', pos=-2)
+        self.assert_called('GET', '/flavors/1', pos=-1)
+
     def test_show_bad_id(self):
         self.assertRaises(exceptions.CommandError,
                           self.run_command, 'show xxx')
@@ -454,6 +486,32 @@ class ShellTest(utils.TestCase):
         self.assert_called('POST', '/servers/1234/action',
                            {'os-resetState': {'state': 'active'}})
 
+    def test_services_list(self):
+        self.run_command('service-list')
+        self.assert_called('GET', '/os-services')
+
+    def test_services_list_with_host(self):
+        self.run_command('service-list --host host1')
+        self.assert_called('GET', '/os-services?host=host1')
+
+    def test_services_list_with_servicename(self):
+        self.run_command('service-list --servicename nova-cert')
+        self.assert_called('GET', '/os-services?service=nova-cert')
+
+    def test_services_list_with_host_servicename(self):
+        self.run_command('service-list --host host1 --servicename nova-cert')
+        self.assert_called('GET', '/os-services?host=host1&service=nova-cert')
+
+    def test_services_enable(self):
+        self.run_command('service-enable host1 nova-cert')
+        body = {'host': 'host1', 'service': 'nova-cert'}
+        self.assert_called('PUT', '/os-services/enable', body)
+
+    def test_services_disable(self):
+        self.run_command('service-disable host1 nova-cert')
+        body = {'host': 'host1', 'service': 'nova-cert'}
+        self.assert_called('PUT', '/os-services/disable', body)
+
     def test_host_list(self):
         self.run_command('host-list')
         self.assert_called('GET', '/os-hosts')
@@ -515,11 +573,11 @@ class ShellTest(utils.TestCase):
         self.assert_called('GET', '/os-hypervisors/statistics')
 
     def test_quota_show(self):
-        self.run_command('quota-show test')
+        self.run_command('quota-show --tenant test')
         self.assert_called('GET', '/os-quota-sets/test')
 
     def test_quota_defaults(self):
-        self.run_command('quota-defaults test')
+        self.run_command('quota-defaults --tenant test')
         self.assert_called('GET', '/os-quota-sets/test/defaults')
 
     def test_quota_update(self):
