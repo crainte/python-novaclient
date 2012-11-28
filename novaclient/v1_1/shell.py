@@ -2076,7 +2076,7 @@ def do_aggregate_set_metadata(cs, args):
     _print_aggregate_details(aggregate)
 
 
-@utils.arg('id', metavar='<id>', help='Host aggregate id to delete.')
+@utils.arg('id', metavar='<id>', help='Aggregate id.')
 @utils.arg('host', metavar='<host>', help='The host to add to the aggregate.')
 def do_aggregate_add_host(cs, args):
     """Add the host to the specified aggregate."""
@@ -2085,8 +2085,9 @@ def do_aggregate_add_host(cs, args):
     _print_aggregate_details(aggregate)
 
 
-@utils.arg('id', metavar='<id>', help='Host aggregate id to delete.')
-@utils.arg('host', metavar='<host>', help='The host to add to the aggregate.')
+@utils.arg('id', metavar='<id>', help='Aggregate id.')
+@utils.arg('host', metavar='<host>',
+        help='The host to remove from the aggregate.')
 def do_aggregate_remove_host(cs, args):
     """Remove the specified host from the specified aggregate."""
     aggregate = cs.aggregates.remove_host(args.id, args.host)
@@ -2094,7 +2095,7 @@ def do_aggregate_remove_host(cs, args):
     _print_aggregate_details(aggregate)
 
 
-@utils.arg('id', metavar='<id>', help='Host aggregate id to delete.')
+@utils.arg('id', metavar='<id>', help='Aggregate id.')
 def do_aggregate_details(cs, args):
     """Show details of the specified aggregate."""
     _print_aggregate_details(cs.aggregates.get_details(args.id))
@@ -2120,7 +2121,7 @@ def _print_aggregate_details(aggregate):
     action='store_true',
     dest='disk_over_commit',
     default=False,
-    help='Allow overcommit.(Default=Flase)')
+    help='Allow overcommit.(Default=False)')
 @utils.arg('--disk_over_commit',
     action='store_true',
     help=argparse.SUPPRESS)
