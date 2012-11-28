@@ -1120,7 +1120,7 @@ def do_show(cs, args):
     _print_server(cs, args)
 
 
-@utils.arg('server', metavar='<server>', nargs='+',
+@utils.arg('server', metavar='<server>',
         help='Name or ID of server.')
 @utils.arg('--force',
     dest='force',
@@ -1136,20 +1136,18 @@ def do_delete(cs, args):
     
     # (crainte) hidden force option, please don't use
     if args.force:
-        for server in args.server:
-            try:
-                _find_server(cs, args.server).delete()
-            except Exception, e:
-                print e
+        try:
+            _find_server(cs, args.server).delete()
+        except Exception, e:
+            print e
     else:
         decision = raw_input("You are about to perform a harmful action. Are you certain? [YES]: ")
 
         if decision in "YES":
-            for server in args.server:
-                try:
-                    _find_server(cs, args.server).delete()
-                except Exception, e:
-                    print e
+            try:
+                _find_server(cs, args.server).delete()
+            except Exception, e:
+                print e
         else:
             return
 
