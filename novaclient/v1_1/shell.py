@@ -766,6 +766,7 @@ def do_compute_list(cs, args):
     args.ip6 = None
     args.name = None
     args.image = None
+    args.tenant = None
     args.instance_name = None
 
     if args.uuid:
@@ -1011,6 +1012,9 @@ def do_image_create(cs, args):
             _poll_for_status(cs.servers.get, server.id, 'image_snapshot',
                              [None], status_field=task_state_field,
                              show_progress=False, silent=True)
+
+    else:
+        print image_uuid;
 
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
