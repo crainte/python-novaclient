@@ -453,6 +453,9 @@ class FakeHTTPClient(base_client.HTTPClient):
     def post_os_cloudpipe(self, **ks):
         return (202, {'instance_id': '9d5824aa-20e6-4b9f-b967-76a699fc51fd'})
 
+    def put_os_cloudpipe_configure_project(self, **kw):
+        return (202, None)
+
     #
     # Flavors
     #
@@ -938,6 +941,19 @@ class FakeHTTPClient(base_client.HTTPClient):
                 'disabled': True})
 
     #
+    # Fixed IPs
+    #
+    def get_os_fixed_ips_192_168_1_1(self, *kw):
+        return (200, {"fixed_ip":
+                      {'cidr': '192.168.1.0/24',
+                       'address': '192.168.1.1',
+                       'hostname': 'foo',
+                       'host': 'bar'}})
+
+    def post_os_fixed_ips_192_168_1_1_action(self, body, **kw):
+        return (202, None)
+
+    #
     # Hosts
     #
     def get_os_hosts_host(self, *kw):
@@ -1119,3 +1135,32 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def post_os_networks_networkdisassociate_action(self, **kw):
         return (202, None)
+
+    def get_os_fping(self, **kw):
+        return (
+            200, {
+                'servers': [
+                    {
+                        "id": "1",
+                        "project_id": "fake-project",
+                        "alive": True,
+                    },
+                    {
+                        "id": "2",
+                        "project_id": "fake-project",
+                        "alive": True,
+                    },
+                ]
+            }
+        )
+
+    def get_os_fping_1(self, **kw):
+        return (
+            200, {
+                'server': {
+                    "id": "1",
+                    "project_id": "fake-project",
+                    "alive": True,
+                }
+            }
+        )

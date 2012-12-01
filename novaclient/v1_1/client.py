@@ -7,6 +7,7 @@ from novaclient.v1_1 import flavor_access
 from novaclient.v1_1 import floating_ip_dns
 from novaclient.v1_1 import floating_ips
 from novaclient.v1_1 import floating_ip_pools
+from novaclient.v1_1 import fping
 from novaclient.v1_1 import hosts
 from novaclient.v1_1 import hypervisors
 from novaclient.v1_1 import images
@@ -24,6 +25,7 @@ from novaclient.v1_1 import volumes
 from novaclient.v1_1 import volume_snapshots
 from novaclient.v1_1 import volume_types
 from novaclient.v1_1 import services
+from novaclient.v1_1 import fixed_ips
 
 
 class Client(object):
@@ -69,6 +71,7 @@ class Client(object):
         self.certs = certs.CertificateManager(self)
         self.floating_ips = floating_ips.FloatingIPManager(self)
         self.floating_ip_pools = floating_ip_pools.FloatingIPPoolManager(self)
+        self.fping = fping.FpingManager(self)
         self.volumes = volumes.VolumeManager(self)
         self.volume_snapshots = volume_snapshots.SnapshotManager(self)
         self.volume_types = volume_types.VolumeTypeManager(self)
@@ -86,6 +89,7 @@ class Client(object):
         self.hosts = hosts.HostManager(self)
         self.hypervisors = hypervisors.HypervisorManager(self)
         self.services = services.ServiceManager(self)
+        self.fixed_ips = fixed_ips.FixedIPsManager(self)
 
         # Add in any extensions...
         if extensions:

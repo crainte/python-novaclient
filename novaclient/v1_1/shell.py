@@ -279,6 +279,13 @@ def do_cloudpipe_create(cs, args):
     cs.cloudpipe.create(args.project)
 
 
+@utils.arg('address', metavar='<ip address>', help='New IP Address.')
+@utils.arg('port', metavar='<port>', help='New Port.')
+def do_cloudpipe_configure(cs, args):
+    """Create a cloudpipe instance for the given project"""
+    cs.cloudpipe.update(args.address, args.port)
+
+
 def _poll_for_status(poll_fn, obj_id, action, final_ok_states,
                      poll_period=5, show_progress=True,
                      status_field="status", silent=False):
@@ -407,7 +414,7 @@ def do_flavor_show(cs, args):
 @utils.arg('--rxtx-factor',
      metavar='<factor>',
      help="RX/TX factor (default 1)",
-     default=1)
+     default=1.0)
 @utils.arg('--is-public',
      metavar='<is-public>',
      help="Make flavor accessible to the public (default true)",
@@ -2175,6 +2182,25 @@ def do_service_disable(cs, args):
     """Enable the service"""
     result = cs.services.disable(args.host, args.service)
     utils.print_list([result], ['Host', 'Service', 'Disabled'])
+
+
+@utils.arg('fixed_ip', metavar='<fixed_ip>', help='Fixed IP Address.')
+def do_fixed_ip_get(cs, args):
+    """Get info on a fixed ip"""
+    result = cs.fixed_ips.get(args.fixed_ip)
+    utils.print_list([result], ['address', 'cidr', 'hostname', 'host'])
+
+
+@utils.arg('fixed_ip', metavar='<fixed_ip>', help='Fixed IP Address.')
+def do_fixed_ip_reserve(cs, args):
+    """Reserve a fixed ip"""
+    cs.fixed_ips.reserve(args.fixed_ip)
+
+
+@utils.arg('fixed_ip', metavar='<fixed_ip>', help='Fixed IP Address.')
+def do_fixed_ip_unreserve(cs, args):
+    """Unreserve a fixed ip"""
+    cs.fixed_ips.unreserve(args.fixed_ip)
 
 
 @utils.arg('host', metavar='<hostname>', help='Name of host.')
