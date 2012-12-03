@@ -1078,6 +1078,28 @@ def _print_server(cs, args):
 
     info['networks'] = string
 
+    if args.bandwidth:
+        # (crainte) i should be able to get this value another way...
+        bandwidths = info.get('rax-bandwidth:bandwidth')
+
+        string = '\n'
+        for interface in bandwidths:
+            for key,value in interface.items():
+                if key in "interface":
+                    string += '%s\n' % value
+                elif key in 'bandwidth_outbound':
+                    string += '    outbound = %s\n' % value
+                elif key in 'bandwidth_inbound':
+                    string += '     inbound = %s\n' % value
+                elif key in 'audit_period_start':
+                    string += '       start = %s\n' % value
+                elif key in 'audit_period_end':
+                    string += '         end = %s\n' % value
+                else:
+                    string += '%s = %s\n' % (key,value)
+
+        info['networks bandwidth'] = string
+
     flavor = info.get('flavor', {})
     flavor_id = flavor.get('id', '')
     if args.minimal:
@@ -1122,6 +1144,11 @@ def _print_server(cs, args):
 
 @utils.arg('--minimal',
     dest='minimal',
+    action="store_true",
+    default=False,
+    help='Skips flavor/image lookups when showing instances')
+@utils.arg('--bandwidth',
+    dest='bandwidth',
     action="store_true",
     default=False,
     help='Skips flavor/image lookups when showing instances')
