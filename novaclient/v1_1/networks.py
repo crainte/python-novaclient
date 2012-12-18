@@ -18,6 +18,7 @@ Network interface.
 """
 
 from novaclient import base
+from novaclient import exceptions
 
 
 class Network(base.Resource):
@@ -107,7 +108,7 @@ class NetworkManager(base.ManagerWithFind):
         elif disassociate_host:
             body = {"disassociate_host": None}
         else:
-            raise CommandError(
+            raise exceptions.CommandError(
                 "Must disassociate either host or project or both")
 
         self.api.client.post("/os-networksv2/%s/action" % base.getid(network),
