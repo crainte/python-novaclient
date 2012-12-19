@@ -752,6 +752,10 @@ def do_list(cs, args):
     action="store_true",
     default=False,
     help='Search by providing an instance uuid')
+@utils.arg('--minimal',
+    action="store_true",
+    default=False,
+    help='Easily parsible return')
 @utils.arg('--display',
     dest='display',
     metavar='<display>',
@@ -791,8 +795,11 @@ def do_compute_list(cs, args):
         for k in sorted(results, key=lambda x: getattr(x, 'OS-EXT-SRV-ATTR:host'), reverse=False):
             if getattr(k, 'OS-EXT-SRV-ATTR:host') in args.host: servers.append(k)
 
-    utils.print_list(servers, columns,
-                    formatters, sortby_index=1)
+        if args.minimal:
+            for item in servers:
+                print "%s;%s;%s;%s" % (item.id, item.name, item.status, item.tenant_id)
+        else:
+            utils.print_list(servers, columns, formatters, sortby_index=1)
 
 
 @utils.arg('--hard',
