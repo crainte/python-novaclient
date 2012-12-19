@@ -692,7 +692,7 @@ def do_image_delete(cs, args):
     dest='host',
     metavar='<hostname>',
     default=None,
-    help='Search instances by hostname to which they are assigned '
+    help='Search with regular expression match by hostname to which they are assigned '
          '(Admin only).')
 @utils.arg('--all-tenants',
     dest='all_tenants',
@@ -740,41 +740,25 @@ def do_list(cs, args):
     formatters = {'Networks': utils._format_servers_list_networks, 
             'Flavor': utils._format_servers_list_flavor,
             'Image': utils._format_servers_list_image}
+
     utils.print_list(cs.servers.list(search_opts=search_opts), columns,
                      formatters, sortby_index=1)
 
-@utils.arg('compute', metavar='<compute>', help='Name of compute node.')
-@utils.arg('--uuid', action="store_true", default=False, help='')
+
+@utils.arg('compute',
+    metavar='<compute>',
+    help='Full name of compute node')
+@utils.arg('--uuid',
+    action="store_true",
+    default=False,
+    help='Search by providing an instance uuid')
 @utils.arg('--display',
     dest='display',
     metavar='<display>',
     default=None,
     help='Limit the columns displayed by comma separated list.')
-@utils.arg('--status',
-    dest='status',
-    metavar='<status>',
-    default=None,
-    help='Search by server status')
-@utils.arg('--flavor',
-    dest='flavor',
-    metavar='<flavor>',
-    type=int,
-    default=None,
-    help='Search by flavor ID')
 def do_compute_list(cs, args):
-    """List all servers on a compute node."""
-
-    # (crainte) should probably convert these
-    # to actual args that way I can filter status/flavor etc.
-    # Original idea from mark.lessel
-    args.all_tenants = 1
-    args.reservation_id = None
-    args.ip = None
-    args.ip6 = None
-    args.name = None
-    args.image = None
-    args.tenant = None
-    args.instance_name = None
+    """List all servers on a specific compute node."""
 
     if args.uuid:
         s = _find_server(cs, args.compute)
@@ -783,8 +767,32 @@ def do_compute_list(cs, args):
     else:
         args.host = args.compute
 
-    # (crainte) should print which node i'm searching for, or error if not found
-    do_list(cs, args)
+    search_opts = {
+        'all_tenants': 1,
+        'host': args.host
+        }
+
+    id_col = 'ID'
+
+    if args.display:
+        columns = [id_col]
+        for col in args.display.split(","):
+            columns.append(col.strip().title())
+    else:
+        columns = [id_col, 'Name', 'Status', 'Tenant ID']
+
+    formatters = {'Networks': utils._format_servers_list_networks,
+        'Flavor': utils._format_servers_list_flavor,
+        'Image': utils._format_servers_list_image}
+
+    results = cs.servers.list(search_opts=search_opts)
+    if results:
+        servers = []
+        for k in sorted(results, key=lambda x: getattr(x, 'OS-EXT-SRV-ATTR:host'), reverse=False):
+            if getattr(k, 'OS-EXT-SRV-ATTR:host') in args.host: servers.append(k)
+
+    utils.print_list(servers, columns,
+                    formatters, sortby_index=1)
 
 
 @utils.arg('--hard',
