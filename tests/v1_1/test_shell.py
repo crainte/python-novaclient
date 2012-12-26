@@ -72,6 +72,38 @@ class ShellTest(utils.TestCase):
     def assert_called_anytime(self, method, url, body=None):
         return self.shell.cs.assert_called_anytime(method, url, body)
 
+    def test_agents_list_with_hypervisor(self):
+        self.run_command('agent-list --hypervisor xen')
+        self.assert_called('GET', '/os-agents?hypervisor=xen')
+
+    def test_agents_create(self):
+        self.run_command('agent-create win x86 7.0 '
+                         '/xxx/xxx/xxx '
+                         'add6bb58e139be103324d04d82d8f546 '
+                         'kvm')
+        self.assert_called(
+            'POST', '/os-agents',
+            {'agent': {
+                     'hypervisor': 'kvm',
+                     'os': 'win',
+                     'architecture': 'x86',
+                     'version': '7.0',
+                     'url': '/xxx/xxx/xxx',
+                     'md5hash': 'add6bb58e139be103324d04d82d8f546'}})
+
+    def test_agents_delete(self):
+        self.run_command('agent-delete 1')
+        self.assert_called('DELETE', '/os-agents/1')
+
+    def test_agents_modify(self):
+        self.run_command('agent-modify 1 8.0 /yyy/yyyy/yyyy '
+                         'add6bb58e139be103324d04d82d8f546')
+        self.assert_called('PUT', '/os-agents/1',
+                          {"para": {
+                               "url": "/yyy/yyyy/yyyy",
+                               "version": "8.0",
+                               "md5hash": "add6bb58e139be103324d04d82d8f546"}})
+
     def test_boot(self):
         self.run_command('boot --flavor 1 --image 1 some-server')
         self.assert_called_anytime(
@@ -82,7 +114,6 @@ class ShellTest(utils.TestCase):
                 'imageRef': '1',
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
                 }},
         )
 
@@ -125,7 +156,6 @@ class ShellTest(utils.TestCase):
                 'metadata': {'foo': 'bar=pants', 'spam': 'eggs'},
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
             }},
         )
 
@@ -140,7 +170,6 @@ class ShellTest(utils.TestCase):
                     'imageRef': '1',
                     'min_count': 1,
                     'max_count': 1,
-                    'networks': [],
                 },
                 'os:scheduler_hints': {'a': 'b=c'},
             },
@@ -182,7 +211,6 @@ class ShellTest(utils.TestCase):
                 'imageRef': '1',
                 'min_count': 1,
                 'max_count': 1,
-                'networks': [],
                 'personality': [
                    {'path': '/tmp/bar', 'contents': expected_file_data},
                    {'path': '/tmp/foo', 'contents': expected_file_data},
@@ -196,14 +224,36 @@ class ShellTest(utils.TestCase):
         cmd = 'boot some-server --image 1 --file /foo=%s' % invalid_file
         self.assertRaises(exceptions.CommandError, self.run_command, cmd)
 
+    def test_boot_num_instances(self):
+        self.run_command('boot --image 1 --flavor 1 --num-instances 3 server')
+        self.assert_called_anytime(
+            'POST', '/servers',
+            {
+                'server': {
+                    'flavorRef': '1',
+                    'name': 'server',
+                    'imageRef': '1',
+                    'min_count': 1,
+                    'max_count': 3,
+                }
+            })
+
+    def test_boot_invalid_num_instances(self):
+        cmd = 'boot --image 1 --flavor 1 --num-instances 1  server'
+        self.assertRaises(exceptions.CommandError, self.run_command, cmd)
+
     def test_flavor_list(self):
         self.run_command('flavor-list')
-        self.assert_called('GET', '/flavors/2/os-extra_specs')
+        self.assert_called('GET', '/flavors/aa1/os-extra_specs')
         self.assert_called_anytime('GET', '/flavors/detail')
 
     def test_flavor_show(self):
         self.run_command('flavor-show 1')
         self.assert_called_anytime('GET', '/flavors/1')
+
+    def test_flavor_show_with_alphanum_id(self):
+        self.run_command('flavor-show aa1')
+        self.assert_called_anytime('GET', '/flavors/aa1')
 
     def test_image_show(self):
         self.run_command('image-show 1')
@@ -297,6 +347,15 @@ class ShellTest(utils.TestCase):
         self.assert_called('POST', '/servers/1234/action',
                            {'changePassword': {'adminPass': 'p'}})
 
+    def test_scrub(self):
+        self.run_command('scrub 4ffc664c198e435e9853f2538fbcd7a7')
+        self.assert_called('GET', '/os-networks', pos=-4)
+        self.assert_called('GET', '/os-security-groups?all_tenants=1',
+                          pos=-3)
+        self.assert_called('POST', '/os-networks/1/action',
+                           {"disassociate": None}, pos=-2)
+        self.assert_called('DELETE', '/os-security-groups/1')
+
     def test_show(self):
         self.run_command('show 1234')
         self.assert_called('GET', '/servers/1234', pos=-3)
@@ -386,6 +445,29 @@ class ShellTest(utils.TestCase):
         self.run_command('dns-domains')
         self.assert_called('GET', '/os-floating-ip-dns')
 
+    def test_floating_ip_bulk_list(self):
+        self.run_command('floating-ip-bulk-list')
+        self.assert_called('GET', '/os-floating-ips-bulk')
+
+    def test_floating_ip_bulk_create(self):
+        self.run_command('floating-ip-bulk-create 10.0.0.1/24')
+        self.assert_called('POST', '/os-floating-ips-bulk',
+                           {'floating_ips_bulk_create':
+                                {'ip_range': '10.0.0.1/24'}})
+
+    def test_floating_ip_bulk_create_host_and_interface(self):
+        self.run_command('floating-ip-bulk-create 10.0.0.1/24 --pool testPool \
+                         --interface ethX')
+        self.assert_called('POST', '/os-floating-ips-bulk',
+                           {'floating_ips_bulk_create':
+                                {'ip_range': '10.0.0.1/24',
+                                 'pool': 'testPool', 'interface': 'ethX'}})
+
+    def test_floating_ip_bulk_delete(self):
+        self.run_command('floating-ip-bulk-delete 10.0.0.1/24')
+        self.assert_called('PUT', '/os-floating-ips-bulk/delete',
+                                {'ip_range': '10.0.0.1/24'})
+
     def test_usage_list(self):
         self.run_command('usage-list --start 2000-01-20 --end 2005-02-01')
         self.assert_called('GET',
@@ -404,8 +486,8 @@ class ShellTest(utils.TestCase):
                            'detailed=1')
 
     def test_flavor_delete(self):
-        self.run_command("flavor-delete flavordelete")
-        self.assert_called('DELETE', '/flavors/flavordelete')
+        self.run_command("flavor-delete 2")
+        self.assert_called('DELETE', '/flavors/2')
 
     def test_flavor_create(self):
         self.run_command("flavor-create flavorcreate "
@@ -562,6 +644,18 @@ class ShellTest(utils.TestCase):
         self.run_command('host-action sample-host --action reboot')
         self.assert_called('GET', '/os-hosts/sample-host/reboot')
 
+    def test_coverage_start(self):
+        self.run_command('coverage-start')
+        self.assert_called('POST', '/os-coverage/action')
+
+    def test_coverage_stop(self):
+        self.run_command('coverage-stop')
+        self.assert_called('POST', '/os-coverage/action')
+
+    def test_coverage_report(self):
+        self.run_command('coverage-report report')
+        self.assert_called_anytime('POST', '/os-coverage/action')
+
     def test_hypervisor_list(self):
         self.run_command('hypervisor-list')
         self.assert_called('GET', '/os-hypervisors')
@@ -589,6 +683,11 @@ class ShellTest(utils.TestCase):
     def test_quota_show(self):
         self.run_command('quota-show --tenant test')
         self.assert_called('GET', '/os-quota-sets/test')
+
+    def test_quota_show_no_tenant(self):
+        self.assertRaises(exceptions.CommandError,
+                          self.run_command,
+                          'quota-show')
 
     def test_quota_defaults(self):
         self.run_command('quota-defaults --tenant test')
@@ -629,6 +728,50 @@ class ShellTest(utils.TestCase):
                                       'vpn_port': '1234'}}
         self.assert_called('PUT', '/os-cloudpipe/configure-project', body)
 
+    def test_network_associate_host(self):
+        self.run_command('network-associate-host 1 testHost')
+        body = {'associate_host': 'testHost'}
+        self.assert_called('POST', '/os-networks/1/action', body)
+
+    def test_network_associate_project(self):
+        self.run_command('network-associate-project 1')
+        body = {'id': "1"}
+        self.assert_called('POST', '/os-networks/add', body)
+
+    def test_network_disassociate(self):
+        self.run_command('network-disassociate 1')
+        body = {'disassociate': None}
+        self.assert_called('POST', '/os-networks/1/action', body)
+
+    def test_network_disassociate_host(self):
+        self.run_command('network-disassociate --host-only 1 2')
+        body = {'disassociate_host': None}
+        self.assert_called('POST', '/os-networks/2/action', body)
+
+    def test_network_disassociate(self):
+        self.run_command('network-disassociate --project-only 1 2')
+        body = {'disassociate_project': None}
+        self.assert_called('POST', '/os-networks/2/action', body)
+
+    def test_network_create_v4(self):
+        self.run_command('network-create --fixed-range-v4 10.0.1.0/24 \
+                          new_network')
+        body = {'cidr': '10.0.1.0/24', 'label': 'new_network'}
+        self.assert_called('POST', '/os-networks', body)
+
+    def test_network_create_v4(self):
+        self.run_command('network-create --fixed-range-v4 10.0.1.0/24 \
+                         --dns1 10.0.1.254 new_network')
+        body = {'network': {'cidr': '10.0.1.0/24', 'label': 'new_network',
+                            'dns1': '10.0.1.254'}}
+        self.assert_called('POST', '/os-networks', body)
+
+    def test_network_create_v6(self):
+        self.run_command('network-create --fixed-range-v6 2001::/64 \
+                          new_network')
+        body = {'network': {'cidr_v6': '2001::/64', 'label': 'new_network'}}
+        self.assert_called('POST', '/os-networks', body)
+
     def test_backup(self):
         self.run_command('backup sample-server back1 daily 1')
         self.assert_called('POST', '/servers/1234/action',
@@ -640,3 +783,10 @@ class ShellTest(utils.TestCase):
                            {'createBackup': {'name': 'back1',
                                              'backup_type': 'daily',
                                              'rotation': '1'}})
+
+    def test_absolute_limits(self):
+        self.run_command('absolute-limits')
+        self.assert_called('GET', '/limits')
+
+        self.run_command('absolute-limits --reserved')
+        self.assert_called('GET', '/limits?reserved=1')

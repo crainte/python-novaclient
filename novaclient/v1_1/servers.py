@@ -502,6 +502,7 @@ class ServerManager(local_base.BootingManagerWithFind):
             boot_kwargs['block_device_mapping'] = block_device_mapping
         else:
             resource_url = "/servers"
+        if nics:
             boot_kwargs['nics'] = nics
 
         response_key = "server"
@@ -610,7 +611,8 @@ class ServerManager(local_base.BootingManagerWithFind):
         :param meta: Metadata to give newly-created image entity
         """
         body = {'name': image_name, 'metadata': metadata or {}}
-        location = self._action('createImage', server, body)[0]['location']
+        resp = self._action('createImage', server, body)[0]
+        location = resp.headers['location']
         image_uuid = location.split('/')[-1]
         return image_uuid
 
