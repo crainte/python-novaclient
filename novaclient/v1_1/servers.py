@@ -186,16 +186,16 @@ class Server(base.Resource):
         """
         self.manager.reboot(self, reboot_type)
 
-    def rebuild(self, image, password=None, **kwargs):
+    def rebuild(self, image, password=None, disk_config=None, **kwargs):
         """
         Rebuild -- shut down and then re-image -- this server.
 
         :param image: the :class:`Image` (or its ID) to re-image with.
         :param password: string to set as password on the rebuilt server.
         """
-        return self.manager.rebuild(self, image, password=password, **kwargs)
+        return self.manager.rebuild(self, image, password=password, disk_config=disk_config, **kwargs)
 
-    def resize(self, flavor, **kwargs):
+    def resize(self, flavor, disk_config=None, **kwargs):
         """
         Resize the server's resources.
 
@@ -206,7 +206,7 @@ class Server(base.Resource):
         flavor quickly with :meth:`revert_resize`. All resizes are
         automatically confirmed after 24 hours.
         """
-        self.manager.resize(self, flavor, **kwargs)
+        self.manager.resize(self, flavor, disk_config, **kwargs)
 
     def create_image(self, image_name, metadata=None):
         """
@@ -445,7 +445,7 @@ class ServerManager(local_base.BootingManagerWithFind):
                max_count=None, security_groups=None, userdata=None,
                key_name=None, availability_zone=None,
                block_device_mapping=None, nics=None, scheduler_hints=None,
-               config_drive=None, **kwargs):
+               config_drive=None, disk_config=None, **kwargs):
         # TODO: (anthony) indicate in doc string if param is an extension
         # and/or optional
         """
@@ -495,7 +495,7 @@ class ServerManager(local_base.BootingManagerWithFind):
             max_count=max_count, security_groups=security_groups,
             key_name=key_name, availability_zone=availability_zone,
             scheduler_hints=scheduler_hints, config_drive=config_drive,
-            **kwargs)
+            disk_config=disk_config, **kwargs)
 
         if block_device_mapping:
             resource_url = "/os-volumes_boot"
@@ -549,7 +549,7 @@ class ServerManager(local_base.BootingManagerWithFind):
         """
         self._action('reboot', server, {'type': reboot_type})
 
-    def rebuild(self, server, image, password=None, **kwargs):
+    def rebuild(self, server, image, password=None, disk_config=None, **kwargs):
         """
         Rebuild -- shut down and then re-image -- a server.
 
@@ -560,6 +560,8 @@ class ServerManager(local_base.BootingManagerWithFind):
         body = {'imageRef': base.getid(image)}
         if password is not None:
             body['adminPass'] = password
+	if disk_config is not None:
+            body['OS-DCF:diskConfig'] = disk_config
         _resp, body = self._action('rebuild', server, body, **kwargs)
         return Server(self, body['server'])
 
@@ -571,7 +573,7 @@ class ServerManager(local_base.BootingManagerWithFind):
         """
         self._action('migrate', server)
 
-    def resize(self, server, flavor, **kwargs):
+    def resize(self, server, flavor, disk_config=None, **kwargs):
         """
         Resize a server's resources.
 
@@ -583,7 +585,10 @@ class ServerManager(local_base.BootingManagerWithFind):
         flavor quickly with :meth:`revert_resize`. All resizes are
         automatically confirmed after 24 hours.
         """
-        info = {'flavorRef': base.getid(flavor)}
+        if disk_config is not None:
+            info = {'flavorRef': base.getid(flavor),'OS-DCF:diskConfig': disk_config}
+        else:
+            info = {'flavorRef': base.getid(flavor)}
         self._action('resize', server, info=info, **kwargs)
 
     def confirm_resize(self, server):

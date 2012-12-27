@@ -133,7 +133,15 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
     else:
         config_drive = args.config_drive
 
+    if args.disk_config:
+        disk_config = args.disk_config.upper()
+        if disk_config=='MANUAL':
+            disk_config = disk_config
+        else:
+            disk_config = "AUTO"
+
     boot_kwargs = dict(
+            disk_config=disk_config,
             meta=meta,
             files=files,
             key_name=key_name,
@@ -150,7 +158,11 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
 
     return boot_args, boot_kwargs
 
-
+@utils.arg('--disk-config',
+     default="AUTO",
+     metavar="<auto|manual>",
+     help="Whether to expand primary partition to fill the entire disk."
+          " This overrides the value inherited from image.")
 @utils.arg('--flavor',
      default=None,
      metavar='<flavor>',
@@ -994,6 +1006,11 @@ def do_reboot(cs, args):
     help="Set the provided password on the rebuild instance.")
 @utils.arg('--rebuild_password',
     help=argparse.SUPPRESS)
+@utils.arg('--disk-config',
+     default="AUTO",
+     metavar="<auto|manual>",
+     help="Whether to expand primary partition to fill the entire disk."
+          " This overrides the value inherited from image.")
 @utils.arg('--poll',
     dest='poll',
     action="store_true",
@@ -1014,8 +1031,17 @@ def do_rebuild(cs, args):
     else:
         _password = None
 
+    if args.disk_config:
+        disk_config = args.disk_config.upper()
+        if disk_config=='MANUAL':
+	    print "setting manual"
+            _disk_config = disk_config
+        else:
+	    print "setting auto"
+            _disk_config = "AUTO"
+
     kwargs = utils.get_resource_manager_extra_kwargs(do_rebuild, args)
-    s = server.rebuild(image, _password, **kwargs)
+    s = server.rebuild(image, _password, _disk_config, **kwargs)
     _print_server(cs, args)
 
     if args.poll:
@@ -1032,6 +1058,11 @@ def do_rename(cs, args):
 
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 @utils.arg('flavor', metavar='<flavor>', help="Name or ID of new flavor.")
+@utils.arg('--disk-config',
+     default="AUTO",
+     metavar="<auto|manual>",
+     help="Whether to expand primary partition to fill the entire disk."
+          " This overrides the value inherited from image.")
 @utils.arg('--poll',
     dest='poll',
     action="store_true",
@@ -1042,7 +1073,16 @@ def do_resize(cs, args):
     server = _find_server(cs, args.server)
     flavor = _find_flavor(cs, args.flavor)
     kwargs = utils.get_resource_manager_extra_kwargs(do_resize, args)
-    server.resize(flavor, **kwargs)
+
+    if args.disk_config:
+        disk_config = args.disk_config.upper()
+        if disk_config=='MANUAL':
+            disk_config = disk_config
+        else:
+            disk_config = "AUTO"
+    
+    server.resize(flavor, disk_config, **kwargs)
+
     if args.poll:
         _poll_for_status(cs.servers.get, server.id, 'resizing',
                          ['active', 'verify_resize'])
