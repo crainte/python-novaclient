@@ -136,9 +136,9 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
     if args.disk_config:
         disk_config = args.disk_config.upper()
         if disk_config=='MANUAL':
-            disk_config = disk_config
+           _disk_config = disk_config
         else:
-            disk_config = "AUTO"
+           _disk_config = "AUTO"
 
     boot_kwargs = dict(
             disk_config=disk_config,
@@ -1077,9 +1077,9 @@ def do_resize(cs, args):
     if args.disk_config:
         disk_config = args.disk_config.upper()
         if disk_config=='MANUAL':
-            disk_config = disk_config
+            _disk_config = disk_config
         else:
-            disk_config = "AUTO"
+            _disk_config = "AUTO"
     
     server.resize(flavor, disk_config, **kwargs)
 
