@@ -136,9 +136,9 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
     if args.disk_config:
         disk_config = args.disk_config.upper()
         if disk_config=='MANUAL':
-           _disk_config = disk_config
+            disk_config = disk_config
         else:
-           _disk_config = "AUTO"
+            disk_config = "AUTO"
 
     boot_kwargs = dict(
             disk_config=disk_config,
@@ -1074,13 +1074,29 @@ def do_resize(cs, args):
     flavor = _find_flavor(cs, args.flavor)
     kwargs = utils.get_resource_manager_extra_kwargs(do_resize, args)
 
+    # (redphaser) Adding in option to set manual/auto disk config upon resize
+    # as it is now supported. Also, made it so that it maintains the previous
+    # diskConfig setting. Default behavior is to set AUTO if no option explicitly
+    # given, even if inital config is MANUAL.
+
+    currentFlavor = server._info.copy().get('flavor', {}).get('id', '')
+
+    # (redphaser) since NOVA doesn't seem particularly capabale of gracefully handling 
+    # the situation where a resize down is attempted on a manual disk config slice, I'm
+    # going to go ahead and add it in here until it can be fixed on the backend.
+    # Essentially: If the current config or disk config parameter passed is "MANUAL" on 
+    # a downsize, gracefully throw a command exception and exit.  
+
+    if ((args.disk_config=='MANUAL' or  getattr(server, 'OS-DCF:diskConfig')=='MANUAL') and args.flavor < currentFlavor):
+        raise exceptions.CommandError("Unable to downsize when a server is set to manual disk configuration.")
+
     if args.disk_config:
         disk_config = args.disk_config.upper()
-        if disk_config=='MANUAL':
-            _disk_config = disk_config
-        else:
-            _disk_config = "AUTO"
-    
+        if (args.disk_config!='MANUAL' and args.disk_config!='AUTO'):
+            raise exceptions.CommandError("Invalid disk configuration. <manual|auto>")
+    else:
+        disk_config = getattr(server, 'OS-DCF:diskConfig')
+            
     server.resize(flavor, disk_config, **kwargs)
 
     if args.poll:
