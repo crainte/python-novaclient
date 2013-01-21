@@ -7,10 +7,12 @@ New
 - ``resize`` has gained a new flag, ``--disk-config <auto|manual>`` to allow you to change between the two configurations.
 - ``compute-list`` lists all instances that a specific compute host manages.
 - ``tenant-servers`` uses the os-simple-tenant-usage extension to view full lists of servers for a tenant.
-- The new flag ``display`` you to instruct novaclient which columns to return in the following functions.
-      - list
-      - compute-list
-      - tenant-servers
+- The new flag ``--display`` will allow you to instruct novaclient which columns to return in the following functions:
+
+  - list
+  - compute-list
+  - tenant-servers
+
 - ``boot`` has gained the flags ``--no-nic`` and ``--disk-config <auto|manual>``
 - More to come.
 
