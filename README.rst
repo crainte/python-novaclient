@@ -24,7 +24,7 @@ Fixes/Changes
 - Removed multiple delete functionality.
 - Quota commands to not require ``--tenant`` to be specified.
 - ``reset-state`` sets to Active by default. It has gained a new flag as well: ``--error``
-- All deletes prompt for approval but have a hidden --force for scripting::
+- All deletes prompt for approval but have a hidden ``--force`` for scripting::
 
    You are about to perform a harmful action. Are you certain? [YES]:
 
