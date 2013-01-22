@@ -30,11 +30,11 @@ Fixes/Changes
 
 - ``nova show`` has been cleaned up to collect networking in one location::
 
-    | name                   | 2012nothing                                                |
+    | name                   | Servername                                                 |
     | networks               |                                                            |
-    |                        | public   = 50.56.179.89                                    |
-    |                        | public   = 2001:4800:780e:0510:7c6f:c598:ff04:b76d         |
-    |                        | private  = 10.180.37.156                                   |
+    |                        | public   = 50.50.50.50                                     |
+    |                        | public   = 2001:2001:2001:2001:2001:2001:2001:2001         |
+    |                        | private  = 10.10.10.10                                     |
     |                        |                                                            |
     | progress               | 100                                                        |
 
