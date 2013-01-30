@@ -41,7 +41,7 @@ class QuotaSetManager(base.ManagerWithFind):
                volumes=None, gigabytes=None,
                ram=None, floating_ips=None, instances=None,
                injected_files=None, cores=None, key_pairs=None,
-               security_groups=None, security_group_rules=None):
+               security_groups=None, security_group_rules=None, networks=None):
 
         body = {'quota_set': {
                 'tenant_id': tenant_id,
@@ -57,7 +57,8 @@ class QuotaSetManager(base.ManagerWithFind):
                 'injected_files': injected_files,
                 'cores': cores,
                 'security_groups': security_groups,
-                'security_group_rules': security_group_rules}}
+                'security_group_rules': security_group_rules,
+                'networks': networks}}
 
         for key in body['quota_set'].keys():
             if body['quota_set'][key] is None:

@@ -87,7 +87,7 @@ class BootingManagerWithFind(base.ManagerWithFind):
             body["server"]["config_drive"] = config_drive
         if admin_pass:
             body["server"]["adminPass"] = admin_pass
-	if disk_config:
+        if disk_config:
             body["server"]["OS-DCF:diskConfig"] = disk_config
         if not min_count:
             min_count = 1

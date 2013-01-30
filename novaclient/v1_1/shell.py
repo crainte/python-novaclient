@@ -2750,7 +2750,7 @@ _quota_resources = ['instances', 'cores', 'ram', 'volumes', 'gigabytes',
                     'floating_ips', 'metadata_items', 'injected_files',
                     'key_pairs', 'injected_file_content_bytes',
                     'injected_file_path_bytes', 'security_groups',
-                    'security_group_rules']
+                    'security_group_rules', 'networks']
 
 
 def _quota_show(quotas):
@@ -2830,6 +2830,11 @@ def do_quota_defaults(cs, args):
     type=int,
     default=None,
     help='New value for the "metadata-items" quota.')
+@utils.arg('--networks',
+    metavar='<networks>',
+    type=int,
+    default=None,
+    help='New value for the "networks" quota.')
 @utils.arg('--metadata_items',
     type=int,
     help=argparse.SUPPRESS)
