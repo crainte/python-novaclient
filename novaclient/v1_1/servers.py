@@ -269,7 +269,7 @@ class Server(base.Resource):
         except Exception:
             return {}
 
-    def live_migrate(self, host,
+    def live_migrate(self, host=None,
                      block_migration=False,
                      disk_over_commit=False):
         """
