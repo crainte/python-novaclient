@@ -139,6 +139,8 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
             disk_config = disk_config
         else:
             disk_config = "AUTO"
+    else:
+        disk_config = None
 
     boot_kwargs = dict(
             disk_config=disk_config,
@@ -159,7 +161,7 @@ def _boot(cs, args, reservation_id=None, min_count=None, max_count=None):
     return boot_args, boot_kwargs
 
 @utils.arg('--disk-config',
-     default="AUTO",
+     default=None,
      metavar="<auto|manual>",
      help="Whether to expand primary partition to fill the entire disk."
           " This overrides the value inherited from image.")
@@ -1008,7 +1010,7 @@ def do_reboot(cs, args):
 @utils.arg('--rebuild_password',
     help=argparse.SUPPRESS)
 @utils.arg('--disk-config',
-     default="AUTO",
+     default=None,
      metavar="<auto|manual>",
      help="Whether to expand primary partition to fill the entire disk."
           " This overrides the value inherited from image.")
@@ -1035,14 +1037,14 @@ def do_rebuild(cs, args):
     if args.disk_config:
         disk_config = args.disk_config.upper()
         if disk_config=='MANUAL':
-	    print "setting manual"
-            _disk_config = disk_config
+            disk_config = disk_config
         else:
-	    print "setting auto"
-            _disk_config = "AUTO"
+            disk_config = "AUTO"
+    else:
+        disk_config = None
 
     kwargs = utils.get_resource_manager_extra_kwargs(do_rebuild, args)
-    s = server.rebuild(image, _password, _disk_config, **kwargs)
+    s = server.rebuild(image, _password, disk_config, **kwargs)
     _print_server(cs, args)
 
     if args.poll:
@@ -1060,7 +1062,7 @@ def do_rename(cs, args):
 @utils.arg('server', metavar='<server>', help='Name or ID of server.')
 @utils.arg('flavor', metavar='<flavor>', help="Name or ID of new flavor.")
 @utils.arg('--disk-config',
-     default="AUTO",
+     default=None,
      metavar="<auto|manual>",
      help="Whether to expand primary partition to fill the entire disk."
           " This overrides the value inherited from image.")
@@ -1077,8 +1079,7 @@ def do_resize(cs, args):
 
     # (redphaser) Adding in option to set manual/auto disk config upon resize
     # as it is now supported. Also, made it so that it maintains the previous
-    # diskConfig setting. Default behavior is to set AUTO if no option explicitly
-    # given, even if inital config is MANUAL.
+    # diskConfig setting.
 
     currentFlavor = server._info.copy().get('flavor', {}).get('id', '')
 
@@ -1096,8 +1097,8 @@ def do_resize(cs, args):
         if (disk_config!='MANUAL' and disk_config!='AUTO'):
             raise exceptions.CommandError("Invalid disk configuration. <manual|auto>")
     else:
-        disk_config = getattr(server, 'OS-DCF:diskConfig')
-            
+        disk_config = None
+
     server.resize(flavor, disk_config, **kwargs)
 
     if args.poll:

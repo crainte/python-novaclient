@@ -103,7 +103,7 @@ class OpenStackComputeShell(object):
             help=argparse.SUPPRESS)
 
         parser.add_argument('--os-cache',
-            default=utils.env('OS_CACHE', default=False),
+            default=utils.env('OS_CACHE', default=True),
             action='store_true',
             help="Use the auth token cache.")
 
