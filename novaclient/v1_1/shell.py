@@ -1089,12 +1089,13 @@ def do_resize(cs, args):
     # Essentially: If the current config or disk config parameter passed is "MANUAL" on 
     # a downsize, gracefully throw a command exception and exit.  
 
-    if ((args.disk_config.upper()=='MANUAL' or  getattr(server, 'OS-DCF:diskConfig')=='MANUAL') and args.flavor < currentFlavor):
-        raise exceptions.CommandError("Unable to downsize when a server is set to manual disk configuration.")
-
     if args.disk_config:
         disk_config = args.disk_config.upper()
-        if (disk_config!='MANUAL' and disk_config!='AUTO'):
+
+        if ((disk_config == 'MANUAL' or  getattr(server, 'OS-DCF:diskConfig') == 'MANUAL') and args.flavor < currentFlavor):
+            raise exceptions.CommandError("Unable to downsize when a server is set to manual disk configuration.")
+
+        if (disk_config != 'MANUAL' and disk_config != 'AUTO'):
             raise exceptions.CommandError("Invalid disk configuration. <manual|auto>")
     else:
         disk_config = None
